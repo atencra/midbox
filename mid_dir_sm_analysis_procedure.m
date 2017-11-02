@@ -28,7 +28,7 @@ if ( options.batch )
 
         mid_dir_plot_filter_fio2d;
 
-        %mid_dir_pdf_plot_filter_fio;
+        mid_dir_filter_to_fio_info(varargin)
 
         cd(outerfolder);
 
@@ -44,7 +44,7 @@ else
 
     mid_dir_plot_filter_fio2d;
 
-    %mid_dir_pdf_plot_filter_fio;
+    mid_dir_filter_to_fio_info(varargin)
 
 end
 

@@ -1,9 +1,9 @@
-function mid_dir_plot_filter_fio2d(datapath)
+function mid_dir_plot_filter_fio2d(datapath, savepdf)
 %mid_dir_plot_filter_fio2d
 %
-%    mid_dir_plot_filter_fio2d(datapath, figpath, gspath)
+%    mid_dir_plot_filter_fio2d(datapath, savepdf)
 % 
-%    mid_dir_pdf_plot_filter_fio2d(datapath, figpath) goes through 
+%    mid_dir_pdf_plot_filter_fio2d(datapath, savepdf) goes through 
 %    the folder datapath and searches for *-filter-fio.mat files.
 %    It then plots the filters and nonlineaities within the folder,
 %    converts the figures to pdf files, and saves the pdfs in the
@@ -13,7 +13,7 @@ function mid_dir_plot_filter_fio2d(datapath)
 %    hold filters and nonlinearities for single neurons.
 %    Default = '.'
 % 
-%    figpath : where you want the figures saved. Default is '."
+%    savepdf : Save figures to pdf files? savepdf = 1 = yes. Default = no.
 %
 %    gspath : complete path to Ghostscript executable. Default is
 %        gspath = 'C:\Program Files (x86)\gs\gs9.19\bin\gswin32c.exe';
@@ -26,55 +26,20 @@ library('export_fig');
 
 
 
-narginchk(0,3);
+narginchk(0,2);
 
-if ( nargin == 0 ) 
+if nargin == 0
     datapath = '.';
-    figpath = '.';
-    %gspath = 'C:\Program Files (x86)\gs\gs9.19\bin\gswin32c.exe'%;
-    gsdir = 'C:\Program Files\gs\gs9.20\bin';
-    gsfile = 'gswin64c.exe';
-    gspath = fullfile(gsdir, gsfile);
 end
 
-if ( nargin == 1 ) 
-    if ( isempty(datapath) )
-        datapath = '.';
-    end
-    figpath = '.';
-    %gspath = 'C:\Program Files (x86)\gs\gs9.19\bin\gswin32c.exe';
-    gsdir = 'C:\Program Files\gs\gs9.20\bin';
-    gsfile = 'gswin64c.exe';
-    gspath = fullfile(gsdir, gsfile);
+if nargin < 2
+    savepdf = 0;
 end
 
-if ( nargin == 2 ) 
-    if ( isempty(datapath) )
-        datapath = '.';
-    end
-    if ( isempty(figpath) )
-        figpath = '.';
-    end
-    %gspath = 'C:\Program Files (x86)\gs\gs9.19\bin\gswin32c.exe';
-    gsdir = 'C:\Program Files\gs\gs9.20\bin';
-    gsfile = 'gswin64c.exe';
-    gspath = fullfile(gsdir, gsfile);
-end
-
-if ( nargin == 3 ) 
-    if ( isempty(datapath) )
-        datapath = '.';
-    end
-    if ( isempty(figpath) )
-        figpath = '.';
-    end
-    if ( isempty(gspath) )
-        %gspath = 'C:\Program Files (x86)\gs\gs9.19\bin\gswin32c.exe';
-        gsdir = 'C:\Program Files\gs\gs9.20\bin';
-        gsfile = 'gswin64c.exe';
-        gspath = fullfile(gsdir, gsfile);
-    end
-end
+figpath = '.';
+gsdir = 'C:\Program Files\gs\gs9.20\bin';
+gsfile = 'gswin64c.exe';
+gspath = fullfile(gsdir, gsfile);
 
 
 startdir = pwd;
@@ -85,20 +50,6 @@ if isempty(dfilters)
 end
 
 matfiles = {dfilters.name};
-
-
-% Get experiment and site files so we can save data by
-% electrode penetrations.
-exp_site = {};
-
-for i = 1:length(matfiles)
-
-    file = matfiles{i};
-    index = findstr(file, '_');
-    exp_site{length(exp_site)+1} = file(1:(index(2)-1));
-end % (for i) 
-
-exp_site = unique(exp_site);
 
 
 
@@ -114,59 +65,50 @@ for i = 1:length(matfiles)
     pdf_file = fullfile(figpath, sprintf('%s12.pdf',name));
    
     pdf_file_total{length(pdf_file_total)+1} = pdf_file;
+
+    load(matfiles{i}, 'data');
     
     if ( ~exist(pdf_file,'file') )
         
-        load(matfiles{i}, 'data');
         
         mid_plot_filter_fio(data);
         
         clear('data');
-        
-        fig2eps(eps_file);
-        pause(0.5);
-        %eps2pdf1(eps_file, gspath);
-        crop = 1;
-        append = 0;
-        gray = 0;
-        quality = 1000;
-        eps2pdf(eps_file, pdf_file, crop, append, gray, quality);
-        pause(0.5);
-        %delete(eps_file);
-        pause(0.5)
-        close all;
+       
+        if ( savepdf ) 
+            fig2eps(eps_file);
+            pause(0.5);
+            %eps2pdf1(eps_file, gspath);
+            crop = 1;
+            append = 0;
+            gray = 0;
+            quality = 1000;
+            eps2pdf(eps_file, pdf_file, crop, append, gray, quality);
+            pause(0.5);
+            %delete(eps_file);
+            pause(0.5)
+            close all;
+        end
 
         fprintf('Figure saved in: %s\n\n', pdf_file);
     else
         fprintf('Figure already saved in: %s\n\n', pdf_file);
+        mid_plot_filter_fio(data);
     end
     
 end % (for i)
 
 
-pdf_file_dir = sprintf('mid_filter_fio.pdf');
-pdf_file_dir = fullfile(figpath, pdf_file_dir);
+if ( savepdf )
+    pdf_file_dir = sprintf('mid_filter_fio12.pdf');
+    pdf_file_dir = fullfile(figpath, pdf_file_dir);
 
-d = dir(pdf_file_dir);
-if isempty(d)
-    append_pdfs(pdf_file_dir, pdf_file_total); 
+    d = dir(pdf_file_dir);
+    if isempty(d)
+        append_pdfs(pdf_file_dir, pdf_file_total); 
+    end
 end
 
-
-for i = 1:length(exp_site)
-    exp_site_files = sprintf('%s_*-filter-fio.pdf', exp_site{i});
-    d = dir(fullfile(figpath, exp_site_files));
-    exp_site_files = {d.name};
-
-    for j = 1:length(exp_site_files)
-        exp_site_files{j} = fullfile(figpath, exp_site_files{j});
-        fprintf('Appending %s\n', exp_site_files{j});
-    end % (for j)
-
-    exp_site_group_pdf_file = fullfile(figpath, sprintf('%s-filter-fio.pdf', exp_site{i}));
-    append_pdfs(exp_site_group_pdf_file, exp_site_files);
-
-end % (for i)
 
 
 return;
@@ -206,7 +148,7 @@ mid12_fio_ior_std = data.fio_mid12.pspkx1x2_std;
 
 
 
-
+figure;
 subplot(4,2,1);
 imagesc(sta_filt);
 tickpref;
@@ -262,7 +204,7 @@ mid12_fio_x2 = data.fio_mid12.x2_mean;
 mid12_fio_ior = data.fio_mid12.pspkx1x2_mean;
 mid12_fio_ior_std = data.fio_mid12.pspkx1x2_std;
 
-subplot(4,2,8);
+subplot(4,2,7);
 imagesc(mid12_fio_x2, mid12_fio_x2,  log10(mid12_fio_ior + 0.001));
 set(gca,'clim', [-3 0]);
 set(gca,'tickdir', 'out');
@@ -271,16 +213,19 @@ xlabel('MID1 Proj');
 ylabel('MID2 Proj');
 
 axis('xy');
-hc = colorbar;
-set(hc,'ytick', [-3 -2 -1 0], 'yticklabel', [0.001 0.01 0.1 1]);
+hc = colorbar('EastOutside');
+set(hc,'ytick', [-3 -2 -1 0], 'yticklabel', [0.001 0.01 0.1 1], ...
+'Position', [0.5 0.11 0.02 0.15], 'tickdir', 'out');
 title('P(spike|x1,x2)');
 
 
 
 suptitle(iskfile);
 
-ss = get(0,'screensize');
-set(gcf,'position', [ss(3)-1.05*560 ss(4)-1.2*720 560 720]);
+%ss = get(0,'screensize');
+%set(gcf,'position', [ss(3)-1.05*560 ss(4)-1.2*720 560 720]);
+
+set(gcf,'position', [680 124 560 854]);
 
 print_mfilename(mfilename);
 
