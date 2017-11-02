@@ -1,0 +1,128 @@
+function [taxis, faxis, locator, numspikes, averate] = ...
+   get_locator_for_mid_analysis(specfile, t1, t2, spet, trigger, fsad)
+% get_locator_for_mid_analysis Binned spike train from ripple stimulation
+%
+% [taxis, faxis, locator, numspikes, averate] = ...
+%     get_locator_for_mid_analysis(specfile, t1, t2, spet, trigger, fsad)
+%
+%
+%  Inputs
+%  -------------------------------------------------------
+%  specfile       :  Absolute path to Spectral Profile File ( *.spr file ).
+%                    The corresponding *_param.mat file is assumed to be
+%                    in the same folder as the .spr file.
+%
+%  t1, t2         :  Evaluation delay interval for STRF(T,F), in seconds
+%                    T E [- T1 , T2 ], Note that T1 and T2 > 0
+%                       t2 is the time before a spike.
+%                       t1 is the time after a spike
+%
+%  spet           :  Array of spike event times, in sample number
+%
+%  trigger        :  Array of Trigger Times, in sample number
+%
+%  fsad            :  A/D Sampling Rate for TRIGGER and SPET
+%
+%
+%  Inputs
+%  -------------------------------------------------------
+%
+%  taxis      : Time Axis (is sec)
+%
+%  faxis      : Frequency Axis (in Hz)
+%
+%  locator    : spike train binned at the resolution of specfile
+%
+%  numspikes  : Number of spikes used in strf
+%
+%  averate    : average firing rate (spikes / sec)
+%
+
+
+numtrig = length(trigger);
+
+% Loading Parameter Data
+
+paramfile = strrep(specfile, '.spr', '_param.mat');
+p = load(paramfile);
+df = p.DF;
+fssnd = p.Fs;
+NT = p.NT;
+faxis = p.faxis;
+
+% index = findstr(specfile,'.spr');
+% paramfile = [specfile(1:index(1)-1) '_param.mat'];
+% f = ['load ' paramfile];
+% eval(f);
+
+% Clear possible useless variables in the param file
+clear App MaxFM XMax Axis MaxRD RD f phase Block Mn RP f1 
+clear f2 Mnfft FM N fFM fRD NB NS LL filename M X fphase Fsn
+
+
+% Flipping Trig and Spet for channel 1 STRF
+mintime = min([trigger(:)' spet(:)']);
+spet = spet - mintime + 1;
+trigger = trigger - mintime + 1;
+
+% Converting Temporal Delays to Sample Numbers
+n1 = round( t1 * fssnd / df);
+n2 = round( t2 * fssnd / df);
+
+
+Ntrials = NT*numtrig; % newnt=320;
+
+locator = zeros(Ntrials,1);
+locator_ipsi = zeros(Ntrials,1);
+
+for trigcount = 2:length(trigger)-1 
+
+    index = find( spet>=trigger(trigcount) & spet<trigger(trigcount+1) );
+
+    spettrig = ceil( (spet(index)-trigger(trigcount)+1) * fssnd / fsad / df );
+
+    if trigcount < 20
+        fprintf('\n');
+        fprintf('%.0f, %.3f, %.3f\n', trigcount, trigger(trigcount), trigger(trigcount+1));
+        fprintf('%.1f\n', spettrig);
+    end
+
+   
+    for k = 1:length(spettrig)
+        % spike = spettrig(k);
+        % locator(spike+(trigcount-1)*NT) = locator(spike+(trigcount-1)*NT)+1;
+
+        spike_index = spettrig(k) + (trigcount-1)*NT;
+        locator(spike_index) = locator(spike_index) + 1;
+        if trigcount < 20
+            fprintf('%.1f\n', spike_index);
+        end
+    end
+    
+end % (while ~feof(fid) & trigcount<length(trigger)-1 )
+
+% Closing all opened files
+fclose('all');
+
+[n, nt, nf] = ripple_stim_length(specfile);
+
+index_min = min( [length(locator) n/nf] );
+locator = locator( 1:index_min );
+
+
+numspikes = sum(locator);
+stim_duration = ( max(trigger) - min(trigger) ) / fsad;
+averate = numspikes / stim_duration;
+
+% get time and frequency axes for the receptive field
+faxis = faxis;
+taxis = (-n1:n2-1) / (fssnd/df);
+
+return;
+
+
+
+
+
+
+

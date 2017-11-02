@@ -1,0 +1,220 @@
+function plot_sta_mid_filters(mid, saveit)
+%plot_sta_pspx_v1_pspx_v2_pspx_pspx1x2 - Plots tuning curve data
+%   obtained using the Michigan 16 channel silicon probe.
+%
+%
+% For illustrations in adobe the following is useful:
+%
+% exportfig(gcf,'sta_v1_v2_fx.eps', 'color', 'rgb', 'height', 8, 'width', 11, 'fontmode', 'fixed', 'fontsize', 6);
+%
+%   caa 6/28/02
+
+if ( nargin == 1 )
+   saveit = 0;
+end
+
+if ( nargin == 2 )
+   if ( saveit ~= 1 )
+      saveit = 0;
+   end
+end
+
+ntot = 1;
+fignum = 1;
+figure;
+
+max_min_sta = [];
+max_min_v1 = [];
+max_min_v2 = [];
+
+numplots = ceil(length(mid)/4);
+
+for i = 1:length(mid)
+
+   % Get number of time and frequency bins used to make filters
+   % Note: the time bins are 5 ms, and the freq bins are 1/6 octave
+   tbins = mid(i).tbins;
+   fbins = mid(i).fbins;
+
+   % Get mean firing rate (probability) over the entire stimulus
+   pspike = mid(i).rpx1pxpxt_sta.mean_firing;
+
+   % Get STA
+   sta = mid(i).rpsta.filter;
+   sta = reshape(sta, fbins, tbins);
+   sta(abs(sta)<0.75) = 0;
+   x_sta = mid(i).rpx1pxpxt_sta.x;
+   fx_sta = mid(i).rpx1pxpxt_sta.ior_mean;
+   pspx_sta = fx_sta;
+   px_sta = mid(i).rpx1pxpxt_sta.px_mean;
+   pxsp_sta = fx_sta ./ pspike .* px_sta;
+
+
+   % Get MID1
+   v1 = mid(i).rpdtest2_v1.filter;
+   v1 = reshape(v1, fbins, tbins);
+   v1(abs(v1)<0.75) = 0;
+   x_v1 = mid(i).rpdx1x2px_pxt_2.x1;
+   fx_v1 = mid(i).rpdx1x2px_pxt_2.ior1_mean;
+   pspx_v1 = fx_v1;
+   px_v1 = mid(i).rpdx1x2px_pxt_2.px1_mean;
+   pxsp_v1 = fx_v1 ./ pspike .* px_v1;
+
+   % Get rid of strange boundary effect in MID1
+   v1(:,end) = 0; %0.5 * (rand(length(v2(:,end)),1)-0.5);
+   v1(:,1) = 0; %0.5 * (rand(length(v2(:,end)),1)-0.5);
+   v1(end,:) = 0; %0.5 * (rand(1,length(v2(1,:)))-0.5);
+   v1(end-1,:) = 0; %0.5 * (rand(1,length(v2(2,:)))-0.5);
+
+
+   % Get MID2
+   v2 = mid(i).rpdtest2_v2.filter;
+   v2 = reshape(v2, fbins, tbins);
+   v2(abs(v2)<0.75) = 0;
+   x_v2 = mid(i).rpdx1x2px_pxt_2.x2;
+   fx_v2 = mid(i).rpdx1x2px_pxt_2.ior2_mean;
+   pspx_v2 = fx_v2;
+   px_v2 = mid(i).rpdx1x2px_pxt_2.px2_mean;
+   pxsp_v2 = fx_v2 ./ pspike .* px_v2;
+
+   % Get rid of strange boundary effect in MID2
+   v2(:,end) = 0; %0.5 * (rand(length(v2(:,end)),1)-0.5);
+   v2(:,1) = 0; %0.5 * (rand(length(v2(:,end)),1)-0.5);
+   v2(end,:) = 0; %0.5 * (rand(1,length(v2(1,:)))-0.5);
+   v2(end-1,:) = 0; %0.5 * (rand(1,length(v2(2,:)))-0.5);
+
+
+   % Get the 2D MID nonlinearity
+   x12 = mid(i).rpdx1x2px_pxt_2.x12;
+   y12 = mid(i).rpdx1x2px_pxt_2.y12;
+   fx_v1v2 = mid(i).rpdx1x2px_pxt_2.ior12_mean;
+
+   % Keep track of min/max values of 1D nonlinearities for axis bounds
+   max_min_sta = [max_min_sta; min(x_sta) max(x_sta)];
+   max_min_v1 = [max_min_v1; min(x_v1) max(x_v1)];
+   max_min_v2 = [max_min_v2; min(x_v2) max(x_v2)];
+
+
+	gaussian = fspecial('gaussian', [3 3], 1);
+
+
+%    % Plot the STA
+%    %------------------------------
+%    subplot(5,4,(fignum-1)*4+1);
+%    minmin = min(min(sta));
+%    maxmax = max(max(sta));
+%    boundary = max([abs(minmin) abs(maxmax)]);
+%    imagesc(sta);
+%    axis('xy');
+%    %colorbar;
+%    %set(gca,'ydir', 'normal');
+%    set(gca, 'tickdir', 'out');
+%    set(gca, 'clim', [-1.05*boundary-eps 1.05*boundary+eps]);
+%    set(gca,'fontsize', 8);
+%    ylabel(sprintf('%.0f : %.0f um', i, mid(i).position));
+%    if ( fignum == 1 )
+%       title('STA', 'fontsize', 8);
+%    end;
+
+
+
+   % Plot the STA
+   %------------------------------
+   subplot(5,3,(fignum-1)*3+1);
+	sta = imfilter(sta,gaussian);
+   minmin = min(min(sta));
+   maxmax = max(max(sta));
+   boundary = max([abs(minmin) abs(maxmax)]);
+   imagesc(sta);
+% 	colorbar;
+   axis('xy');
+   %colorbar;
+   %set(gca,'ydir', 'normal');
+   set(gca, 'tickdir', 'out');
+   set(gca, 'clim', [-1.05*boundary-eps 1.05*boundary+eps]);
+   set(gca,'fontsize', 8);
+   ylabel(sprintf('%.0f : %.0f um', i, mid(i).position));
+   if ( fignum == 1 )
+      title('STA', 'fontsize', 8);
+   end;
+
+
+   % Plot the MID1
+   %------------------------------
+   subplot(5,3,(fignum-1)*3+2);
+%    v1(:,end) = 0.9 * (rand(length(v1(:,end)),1)-0.5);
+   v1(:,end) = 0; %0.5 * (rand(length(v2(:,end)),1)-0.5);
+   v1(:,1) = 0; %0.5 * (rand(length(v2(:,end)),1)-0.5);
+   v1(end,:) = 0; %0.5 * (rand(1,length(v2(1,:)))-0.5);
+   v1(end-1,:) = 0; %0.5 * (rand(1,length(v2(2,:)))-0.5);
+	v1 = imfilter(v1,gaussian);
+   minmin = min(min(v1));
+   maxmax = max(max(v1));
+   boundary = max([abs(minmin) abs(maxmax)]);
+   imagesc(v1);
+   axis('xy');
+   %colorbar;
+   %set(gca,'ydir', 'normal');
+   set(gca, 'tickdir', 'out');
+   set(gca, 'clim', [-1.05*boundary-eps 1.05*boundary+eps]);
+   set(gca,'fontsize', 8);
+   if ( fignum == 1 )
+      title('MID_1', 'fontsize', 8);
+   end;
+
+
+   % Plot the MID2
+   %------------------------------
+   subplot(5,3,(fignum-1)*3+3);
+   v2(:,end) = 0; %0.5 * (rand(length(v2(:,end)),1)-0.5);
+   v2(:,1) = 0; %0.5 * (rand(length(v2(:,end)),1)-0.5);
+   v2(end,:) = 0; %0.5 * (rand(1,length(v2(1,:)))-0.5);
+   v2(end-1,:) = 0; %0.5 * (rand(1,length(v2(2,:)))-0.5);
+	v2 = imfilter(v2,gaussian);
+   minmin = min(min(v2));
+   maxmax = max(max(v2));
+   boundary = max([abs(minmin) abs(maxmax)]);
+   imagesc(v2);
+   axis('xy');
+   %colorbar;
+   %set(gca,'ydir', 'normal');
+   set(gca, 'tickdir', 'out');
+   set(gca, 'clim', [-1.05*boundary-eps 1.05*boundary+eps]);
+   set(gca,'fontsize', 8);
+   if ( fignum == 1 )
+      title('MID_2', 'fontsize', 8);
+   end;
+
+% 	cmap = color_brewer_colormap('rdbu');
+% 	colormap(cmap);
+
+   if ( mod(fignum,5) )
+      fignum = fignum + 1;
+      if ( saveit )
+         if ( i == length(mid) )
+				exportfig(gcf,sprintf('sta_mid1_mid2_%.0f.eps',i), 'color', 'rgb', 'height', 3.5, 'width', 2.5, 'fontmode', 'fixed', 'fontsize', 6);
+				pause(2);
+         end
+      end
+   else
+      print_mfilename(mfilename);
+      set(gcf,'position',[50 100 700 800]);
+      if ( saveit )
+         exportfig(gcf,sprintf('sta_mid1_mid2_%.0f.eps',i), 'color', 'rgb', 'height', 3.5, 'width', 2.5, 'fontmode', 'fixed', 'fontsize', 6);
+         pause(1);
+         close;
+		else
+			pause;
+			close;
+      end
+
+      fignum = 1;
+      if ( i ~= numplots ), eval(['f' num2str(i) '=figure;']); end;
+   end
+
+   %pause(0.5)
+
+end % (for i)
+
+return;
+

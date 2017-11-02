@@ -1,0 +1,324 @@
+[lid_verify,cell_verify,ispike,Nspikes,info_sta,std_sta,info1,std1,info2,std2,info_both,std_both,sta_v1,std_sta_v1,sta_v2,std_v2]=...
+    textread('C:\MATLAB65\work\tatyana\rp_info_dot_all.dat','%u %u %f %u %f %f  %f %f  %f %f  %f %f  %f %f %f %f','commentstyle','shell');
+%textread('E:/miller/Craig/rp_info_dot_all.dat','%u %u %f %u %f %f  %f %f  %f %f  %f %f  %f %f %f %f','commentstyle','shell');
+
+%[lid_verify cell_verify Nspikes]
+
+[lid_verify cell_verify ispike info1 info2 info_both]
+pause
+
+
+%exportfig(gcf,'mid_info_histograms.eps', 'color', 'gray', 'height', 4, 'width', 6, 'fontmode', 'fixed', 'fontsize', 8);
+%exportfig(gcf,'mid_info_scatter.eps', 'color', 'rgb', 'height', 4, 'width', 6, 'fontmode', 'fixed', 'fontsize', 8);
+
+% Compare the information values on linear axes:
+% ----------------------------------------------
+
+figure;
+
+subplot(2,2,1)
+hold on
+xmax = max(info_both);
+plot(info1, info_both, 'o')
+fplot('x', [0 max(info_both)], 'k-')
+fplot('2*x', [0 max(info_both)], 'k-')
+xlim([0 1.1*xmax]);
+ylim([0 1.1*xmax]);
+axis square
+xlabel('info(1 dir)')
+ylabel('info(1 dir and 2 dir)')
+title('difference between 1dir-model and 2dir-model')
+
+subplot(2,2,2)
+hold on
+xmax = max([max(info1) max(info2)]);
+plot(info1,info2,'o')
+fplot('x', [0 xmax], 'k-')
+xlim([0 1.1*xmax]);
+ylim([0 1.1*xmax]);
+axis square
+
+xlabel('info(1 dir)')
+ylabel('info(2 dir)')
+title('relative importance of 2dir')
+
+ind_synergy=find(info_both>info1+info2);
+ind_strong_synergy=find(info_both>(info1+info2)*1.5);
+length(ind_strong_synergy);
+ind_not_synergy=find(info_both<info1+info2);
+Nsynergy=length(ind_synergy);
+info_both(ind_strong_synergy)./(info1(ind_strong_synergy)+info2(ind_strong_synergy));
+
+
+subplot(2,2,3)
+hold off
+plot(info1(ind_synergy)+info2(ind_synergy),info_both(ind_synergy),'ro')
+hold on
+plot(info1(ind_not_synergy)+info2(ind_not_synergy),info_both(ind_not_synergy),'o')
+fplot('x',[0 max([max(info1),max(info2),max(info_both)])])
+axis square
+xlabel('info(1dir)+info(2dir)')
+ylabel('info(1dir + 2dir)')
+title('synergy between directions - selectivity?')
+
+
+subplot(2,2,4)
+hold on;
+plot(info1, info_sta, 'o')
+fplot('x',[0 max(max(info1),max(info_sta))])
+xlim([0 max(max(info1),max(info_sta))])
+ylim([0 max(max(info1),max(info_sta))])
+axis square
+title('difference between  sta and 1dir')
+xlabel('info(sta)')
+ylabel('info(1dir)')
+
+
+
+% Compare the information values on log axes:
+% ----------------------------------------------
+
+figure;
+
+subplot(2,2,1)
+hold on
+xmax = max(info_both);
+plot(info1, info_both, 'ko', 'markersize', 3); %, 'markerfacecolor', 'k');
+fplot('x', [0 max(info_both)], 'k-')
+fplot('2*x', [0 max(info_both)], 'k--')
+xlim([0 1.5*xmax]);
+ylim([0 1.5*xmax]);
+set(gca,'xscale', 'log', 'yscale', 'log');
+set(gca,'tickdir', 'out');
+axis square
+xlabel('Info(1)')
+ylabel('Info(1, 2)')
+title('Degree of Nonlinear Processing')
+%title('difference between 1dir-model and 2dir-model');
+
+subplot(2,2,2)
+hold on
+xmax = max([max(info1) max(info2)]);
+plot(info1, info2, 'ko', 'markersize', 3); %, 'markerfacecolor', 'k');
+fplot('x', [0 xmax], 'k-')
+xlim([0.001 1]);
+ylim([0.001 1]);
+% xlim([0 1.5*xmax]);
+% ylim([0 1.5*xmax]);
+set(gca,'xscale', 'log', 'yscale', 'log');
+set(gca,'tickdir', 'out');
+axis square
+
+xlabel('Info(1)')
+ylabel('Info(2)')
+title('relative importance of 2dir')
+
+ind_synergy=find(info_both>info1+info2);
+ind_strong_synergy=find(info_both>(info1+info2)*1.5);
+length(ind_strong_synergy);
+ind_not_synergy=find(info_both<info1+info2);
+Nsynergy=length(ind_synergy);
+info_both(ind_strong_synergy)./(info1(ind_strong_synergy)+info2(ind_strong_synergy));
+
+
+subplot(2,2,3)
+hold on
+xmax = max([max(info1) max(info2) max(info_both)]);
+plot(info1(ind_synergy)+info2(ind_synergy),info_both(ind_synergy),'ro', 'markersize', 3);
+hp = plot(info1(ind_not_synergy)+info2(ind_not_synergy),info_both(ind_not_synergy),'ko', 'markersize', 3);
+fplot('x', [0 xmax], 'k-')
+fplot('2*x', [0 max(info_both)], 'k--')
+xlim([0 1.5*xmax]);
+ylim([0 1.5*xmax]);
+set(gca,'xscale', 'log', 'yscale', 'log');
+set(gca,'tickdir', 'out');
+axis square
+xlabel('Info(1)+Info(2)')
+ylabel('Info(1, 2)')
+title('Synergy Between Directions')
+
+
+subplot(2,2,4)
+hold on;
+xmax = max([max(info1) max(info_sta)]);
+plot(info1, info_sta, 'ko', 'markersize', 3); %, 'markerfacecolor', 'k');
+fplot('x', [0 xmax], 'k-')
+xlim([0.004 1]);
+ylim([0.004 1]);
+% xlim([0 1.5*xmax]);
+% ylim([0 1.5*xmax]);
+set(gca,'xscale', 'log', 'yscale', 'log');
+set(gca,'tickdir', 'out');
+axis square
+title('difference between  sta and 1dir')
+xlabel('Info(1)')
+ylabel('Info(STA)')
+
+%close all;
+
+
+
+
+figure;
+
+% [info_sta info1 info2 (info1+info2) info_both]
+
+temp1 = 100 * (1 - info1 ./ info_both);
+temp2 = 100 * info_both ./ (info1 + info2);
+temp3 = 100 * info2 ./ info1;
+temp4 = 100 * info_sta ./ info1;
+temp5 = 100 * info_sta ./ info_both;
+
+
+[max(temp1) max(temp2) max(temp3) max(temp4) max(temp5)];
+
+subplot(2,2,1);
+bins = 100*[0:0.1:1];
+count = histc(temp1, bins);
+hb = bar(bins, count, 'histc');
+set(hb, 'facecolor', [0.75 0.75 0.75])
+axis([100*[-0.1 1.1] 0 1.05*max(count)]);
+set(gca,'xtick', 100*[0:0.2:1], 'xticklabel', 100*[0:0.2:1]);
+set(gca,'tickdir', 'out');
+ylabel('#units', 'fontsize', 10);
+title('1 - Info(1) / Info(1,2)', 'fontsize', 10);
+set(gca,'fontsize', 8);
+
+subplot(2,2,2);
+bins = 100*[0:0.5:6];
+count = histc(temp2, bins);
+hb = bar(bins, count, 'histc');
+set(hb, 'facecolor', [0.75 0.75 0.75])
+axis([100*[-0.1 6.1] 0 1.05*max(count)]);
+set(gca,'xtick', 100*[0:6], 'xticklabel', 100*[0:6]);
+set(gca,'tickdir', 'out');
+title('Info(1,2) / (Info(1)+Info(2))', 'fontsize', 10);
+set(gca,'fontsize', 8);
+
+
+subplot(2,2,3);
+bins = 100*[0:0.25:3.5];
+count = histc(temp5, bins);
+hb = bar(bins, count, 'histc');
+set(hb, 'facecolor', [0.75 0.75 0.75])
+axis([100*[-0.1 3.6] 0 1.05*max(count)]);
+set(gca,'xtick', 100*[0:0.5:3.5], 'xticklabel', 100*[0:0.5:3.5]);
+set(gca,'tickdir', 'out');
+ylabel('#units', 'fontsize', 10);
+title('Info(STA) / Info(1,2)', 'fontsize', 10);
+set(gca,'fontsize', 8);
+
+
+% subplot(2,2,3);
+% bins = 0:0.1:1;
+% count = histc(temp3, bins);
+% hb = bar(bins, count, 'histc');
+% set(hb, 'facecolor', [0.75 0.75 0.75])
+% axis([-0.1 1.1 0 1.05*max(count)]);
+% set(gca,'xtick', [0:0.2:1], 'xticklabel', [0:0.2:1]);
+% set(gca,'tickdir', 'out');
+% title('Info(2) / Info(1)', 'fontsize', 10);
+% set(gca,'fontsize', 8);
+
+
+subplot(2,2,4);
+bins = 100*[0:0.5:12.5];
+count = histc(temp4, bins);
+hb = bar(bins, count, 'histc');
+set(hb, 'facecolor', [0.75 0.75 0.75])
+axis([100*[-0.1 12.6] 0 1.05*max(count)]);
+set(gca,'xtick', 100*[0:1:12], 'xticklabel', 100*[0:1:12]);
+set(gca,'tickdir', 'out');
+title('Info(STA) / Info(1)', 'fontsize', 10);
+set(gca,'fontsize', 8);
+
+
+
+nonlinear = 100 * (1 - info1 ./ info_both);
+synergy = 100 * info_both ./ (info1 + info2);
+
+figure;
+subplot(2,2,1)
+hold on;
+plot(nonlinear, synergy, 'ko', 'markersize', 3); %, 'markerfacecolor', 'k');
+%plot([0 100], [100 100],'k-')
+xlim([0 100]);
+% ylim([0 1.5*xmax]);
+%set(gca,'yscale', 'log');%, 'yscale', 'log');
+%set(gca,'xscale', 'log', 'yscale', 'log');
+set(gca,'tickdir', 'out');
+axis square
+title('Correlation between Synergy and Nonlinear Processing')
+xlabel('Nonlinear')
+ylabel('Synergy')
+
+
+subplot(2,2,2)
+hold on;
+plot(nonlinear, synergy, 'ko', 'markersize', 3); %, 'markerfacecolor', 'k');
+%plot([0 100], [100 100],'k-')
+xlim([0 100]);
+ylim([50 1000]);
+set(gca,'yscale', 'log');
+set(gca,'tickdir', 'out');
+axis square
+title('Correlation between Synergy and Nonlinear Processing')
+xlabel('Nonlinear')
+ylabel('Log Synergy')
+
+
+subplot(2,2,3)
+hold on;
+plot(nonlinear, synergy, 'ko', 'markersize', 3); %, 'markerfacecolor', 'k');
+%plot([10 100], [100 100],'k-')
+xlim([10 100]);
+set(gca,'xscale', 'log');
+set(gca,'tickdir', 'out');
+axis square
+title('Correlation between Synergy and Nonlinear Processing')
+xlabel('Log Nonlinear')
+ylabel('Synergy')
+
+subplot(2,2,4)
+hold on;
+plot(nonlinear, synergy, 'ko', 'markersize', 3); %, 'markerfacecolor', 'k');
+%plot([10 100], [100 100],'k-')
+xlim([10 100]);
+ylim([50 1000]);
+set(gca,'xscale', 'log', 'yscale', 'log');
+set(gca,'tickdir', 'out');
+axis square
+title('Correlation between Synergy and Nonlinear Processing')
+xlabel('Log Nonlinear')
+ylabel('Log Synergy')
+
+
+
+% subplot(2,2,4);
+% bins = 0:0.2:2;
+% count = histc(temp4, bins);
+% hb = bar(bins, count, 'histc');
+% set(hb, 'facecolor', [0.75 0.75 0.75])
+% axis([-0.1 2.1 0 1.05*max(count)]);
+% set(gca,'xtick', [0:0.4:2], 'xticklabel', [0:0.4:2]);
+% set(gca,'tickdir', 'out');
+% title('Info(1) / Info(STA)', 'fontsize', 10);
+% set(gca,'fontsize', 8);
+
+
+
+
+% figure
+% 
+% subplot(2,2,1)
+% hist(sta_v1)
+% title('distributions of projections of sta on 1dir')
+% 
+% subplot(2,2,2)
+% hist(sta_v2)
+% title('distributions of projections of sta on 2dir')
+% 
+% subplot(2,2,3)
+% plot(sta_v1,sta_v2,'x')
+% xlabel('projection of sta on 1dir')
+% ylabel('projection of sta on 2dir')

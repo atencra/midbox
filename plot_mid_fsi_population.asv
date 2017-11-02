@@ -1,0 +1,592 @@
+function plot_mid_fsi_population(fsidata)
+%
+% caa 3/5/09
+
+
+
+fsi_mean_fsi1_cdf = [];
+fsi_mean_fsi1_abs_cdf = [];
+fsi_mean_fsi1_right_abs_cdf = [];
+fsi_mean_fsi1_left_abs_cdf = [];
+
+
+fsi_mean_fsi2_cdf = [];
+fsi_mean_fsi2_abs_cdf = [];
+fsi_mean_fsi2_right_abs_cdf = [];
+fsi_mean_fsi2_left_abs_cdf = [];
+
+position = [];
+
+
+for i = 1:length(fsidata)
+
+   position = [position fsidata(i).position];
+
+   fsi_mean_fsi1_cdf = [fsi_mean_fsi1_cdf abs( fsidata(i).fsi_mean_data.fsi1_cdf )];
+   fsi_mean_fsi1_abs_cdf = [fsi_mean_fsi1_abs_cdf abs( fsidata(i).fsi_mean_data.fsi1_abs_cdf )];
+   fsi_mean_fsi1_right_abs_cdf = [fsi_mean_fsi1_right_abs_cdf abs( fsidata(i).fsi_mean_data.fsi1_right_abs_cdf )];
+   fsi_mean_fsi1_left_abs_cdf = [fsi_mean_fsi1_left_abs_cdf abs( fsidata(i).fsi_mean_data.fsi1_left_abs_cdf )];
+
+
+   fsi_mean_fsi2_cdf = [fsi_mean_fsi2_cdf abs( fsidata(i).fsi_mean_data.fsi2_cdf )];
+   fsi_mean_fsi2_abs_cdf = [fsi_mean_fsi2_abs_cdf abs( fsidata(i).fsi_mean_data.fsi2_abs_cdf )];
+   fsi_mean_fsi2_right_abs_cdf = [fsi_mean_fsi2_right_abs_cdf abs( fsidata(i).fsi_mean_data.fsi2_right_abs_cdf )];
+   fsi_mean_fsi2_left_abs_cdf = [fsi_mean_fsi2_left_abs_cdf abs( fsidata(i).fsi_mean_data.fsi2_left_abs_cdf )];
+
+
+end % (for i)
+
+
+fsi_mean_fsi1_cdf ( isnan( fsi_mean_fsi1_cdf ) ) = 0;
+fsi_mean_fsi1_abs_cdf ( isnan( fsi_mean_fsi1_abs_cdf ) ) = 0;
+fsi_mean_fsi1_right_abs_cdf ( isnan( fsi_mean_fsi1_right_abs_cdf ) ) = 0;
+fsi_mean_fsi1_left_abs_cdf ( isnan( fsi_mean_fsi1_left_abs_cdf ) ) = 0;
+
+
+close all;
+
+figure;
+
+% For MID1
+
+subplot(4,2,1);
+hist(fsi_mean_fsi1_cdf, 25);
+title('FSI 1');
+
+subplot(4,2,2);
+hist(fsi_mean_fsi1_abs_cdf, 25);
+title('FSI ABS 1');
+
+
+subplot(4,2,3);
+hist(fsi_mean_fsi1_right_abs_cdf, 25);
+title('FSI Right ABS 1');
+
+subplot(4,2,4);
+hist(fsi_mean_fsi1_left_abs_cdf, 25);
+title('FSI Left ABS 1');
+
+
+% For MID2
+
+subplot(4,2,5);
+hist(fsi_mean_fsi2_cdf, 25);
+title('FSI 2');
+
+subplot(4,2,6);
+hist(fsi_mean_fsi2_abs_cdf, 25);
+title('FSI ABS 2');
+
+
+subplot(4,2,7);
+hist(fsi_mean_fsi2_right_abs_cdf, 25);
+title('FSI Right ABS 2');
+
+subplot(4,2,8);
+hist(fsi_mean_fsi2_left_abs_cdf, 25);
+title('FSI Left ABS 2');
+
+
+boundary = 75:250:1900; % this is the best so far ...
+db = boundary(2) - boundary(1);
+depth = (min(boundary)+db/2):db:(boundary(end)-db/2);
+
+
+% fsi_mean_fsi1_cdf = [];
+% fsi_mean_fsi1_abs_cdf = [];
+% fsi_mean_fsi1_right_abs_cdf = [];
+% fsi_mean_fsi1_left_abs_cdf = [];
+% 
+% fsi_mean_fsi2_cdf = [];
+% fsi_mean_fsi2_abs_cdf = [];
+% fsi_mean_fsi2_right_abs_cdf = [];
+% fsi_mean_fsi2_left_abs_cdf = [];
+
+
+index = cell(1,length(boundary)-1);
+
+fsi_mean_fsi1_cdf_pop = cell(1,length(boundary)-1);
+fsi_mean_fsi1_abs_cdf_pop = cell(1,length(boundary)-1);
+fsi_mean_fsi1_right_abs_cdf_pop = cell(1,length(boundary)-1);
+fsi_mean_fsi1_left_abs_cdf_pop = cell(1,length(boundary)-1);
+
+fsi_mean_fsi1_cdf_mn = zeros(1,length(boundary)-1);
+fsi_mean_fsi1_abs_cdf_mn = zeros(1,length(boundary)-1);
+fsi_mean_fsi1_right_abs_cdf_mn = zeros(1,length(boundary)-1);
+fsi_mean_fsi1_left_abs_cdf_mn = zeros(1,length(boundary)-1);
+
+fsi_mean_fsi1_cdf_se = zeros(1,length(boundary)-1);
+fsi_mean_fsi1_abs_cdf_se = zeros(1,length(boundary)-1);
+fsi_mean_fsi1_right_abs_cdf_se = zeros(1,length(boundary)-1);
+fsi_mean_fsi1_left_abs_cdf_se = zeros(1,length(boundary)-1);
+
+count = zeros(1,length(boundary)-1);
+
+for i = 1:length(boundary)-1
+
+   index{i} = find( position>boundary(i) & position<=boundary(i+1) );
+
+   count(i) = length(index{i});
+
+   fsi_mean_fsi1_cdf_pop{i} = fsi_mean_fsi1_cdf(index{i});
+   fsi_mean_fsi1_abs_cdf_pop{i} = fsi_mean_fsi1_abs_cdf(index{i});
+   fsi_mean_fsi1_right_abs_cdf_pop{i} = fsi_mean_fsi1_right_abs_cdf(index{i});
+   fsi_mean_fsi1_left_abs_cdf_pop{i} = fsi_mean_fsi1_left_abs_cdf(index{i});
+
+   fsi_mean_fsi1_cdf_mn(i) = mean( fsi_mean_fsi1_cdf(index{i}) );
+   fsi_mean_fsi1_abs_cdf_mn(i) = mean( fsi_mean_fsi1_abs_cdf(index{i}) );
+   fsi_mean_fsi1_right_abs_cdf_mn(i) = mean( fsi_mean_fsi1_right_abs_cdf(index{i}) );
+   fsi_mean_fsi1_left_abs_cdf_mn(i) = mean( fsi_mean_fsi1_left_abs_cdf(index{i}) );
+
+   fsi_mean_fsi1_cdf_se(i) = std( fsi_mean_fsi1_cdf(index{i}) ) / sqrt( length( fsi_mean_fsi1_cdf(index{i}) ) );
+   fsi_mean_fsi1_abs_cdf_se(i) = std( fsi_mean_fsi1_abs_cdf(index{i}) ) / sqrt( length( fsi_mean_fsi1_abs_cdf(index{i}) ) );
+   fsi_mean_fsi1_right_abs_cdf_se(i) = std( fsi_mean_fsi1_right_abs_cdf(index{i}) ) / sqrt( length( fsi_mean_fsi1_right_abs_cdf(index{i}) ) );
+   fsi_mean_fsi1_left_abs_cdf_se(i) = std( fsi_mean_fsi1_left_abs_cdf(index{i}) ) / sqrt( length( fsi_mean_fsi1_left_abs_cdf(index{i}) ) );
+
+end % (for i)
+
+
+close all;
+
+data(1).title = 'FSI Mean CDF 1';
+data(1).position = position;
+data(1).data = fsi_mean_fsi1_cdf;
+data(1).boundary = boundary;
+data(1).depth = depth;
+data(1).pop = fsi_mean_fsi1_cdf_pop;
+data(1).mn = fsi_mean_fsi1_cdf_mn;
+data(1).se = fsi_mean_fsi1_cdf_se;
+data(1).ytick = [0:0.01:0.05];
+data(1).yax = [0 0.05];
+
+data(2).title = 'FSI Mean ABS CDF 1';
+data(2).position = position;
+data(2).data = fsi_mean_fsi1_abs_cdf;
+data(2).boundary = boundary;
+data(2).depth = depth;
+data(2).pop = fsi_mean_fsi1_abs_cdf_pop;
+data(2).mn = fsi_mean_fsi1_abs_cdf_mn;
+data(2).se = fsi_mean_fsi1_abs_cdf_se;
+data(2).ytick = [0:0.01:0.05];
+data(2).yax = [0 0.05];
+
+data(3).title = 'FSI Mean Right ABS CDF 1';
+data(3).position = position;
+data(3).data = fsi_mean_fsi1_right_abs_cdf;
+data(3).boundary = boundary;
+data(3).depth = depth;
+data(3).pop = fsi_mean_fsi1_right_abs_cdf_pop;
+data(3).mn = fsi_mean_fsi1_right_abs_cdf_mn;
+data(3).se = fsi_mean_fsi1_right_abs_cdf_se;
+data(3).ytick = [0:0.01:0.05];
+data(3).yax = [0 0.05];
+
+data(4).title = 'FSI Mean Left ABS CDF 1';
+data(4).position = position;
+data(4).data = fsi_mean_fsi1_left_abs_cdf;
+data(4).boundary = boundary;
+data(4).depth = depth;
+data(4).pop = fsi_mean_fsi1_left_abs_cdf_pop;
+data(4).mn = fsi_mean_fsi1_left_abs_cdf_mn;
+data(4).se = fsi_mean_fsi1_left_abs_cdf_se;
+data(4).ytick = [0:0.01:0.05];
+data(4).yax = [0 0.05];
+
+
+data2(1).title = 'FSI Mean CDF 1';
+data2(1).position = position;
+data2(1).data = fsi_mean_fsi1_cdf;
+data2(1).boundary = boundary;
+data2(1).depth = depth;
+data2(1).pop = fsi_mean_fsi1_cdf_pop;
+data2(1).mn = fsi_mean_fsi1_cdf_mn;
+data2(1).se = fsi_mean_fsi1_cdf_se;
+data2(1).ytick = [0:0.01:0.05];
+data2(1).yax = [0 0.05];
+
+data2(2).title = 'FSI Mean ABS CDF 1';
+data2(2).position = position;
+data2(2).data = fsi_mean_fsi1_abs_cdf;
+data2(2).boundary = boundary;
+data2(2).depth = depth;
+data2(2).pop = fsi_mean_fsi1_abs_cdf_pop;
+data2(2).mn = fsi_mean_fsi1_abs_cdf_mn;
+data2(2).se = fsi_mean_fsi1_abs_cdf_se;
+data2(2).ytick = [0:0.01:0.05];
+data2(2).yax = [0 0.05];
+
+data2(3).title = 'FSI Mean Right ABS CDF 1';
+data2(3).position = position;
+data2(3).data = fsi_mean_fsi1_right_abs_cdf;
+data2(3).boundary = boundary;
+data2(3).depth = depth;
+data2(3).pop = fsi_mean_fsi1_right_abs_cdf_pop;
+data2(3).mn = fsi_mean_fsi1_right_abs_cdf_mn;
+data2(3).se = fsi_mean_fsi1_right_abs_cdf_se;
+data2(3).ytick = [0:0.01:0.05];
+data2(3).yax = [0 0.05];
+
+data2(4).title = 'FSI Mean Left ABS CDF 1';
+data2(4).position = position;
+data2(4).data = fsi_mean_fsi1_left_abs_cdf;
+data2(4).boundary = boundary;
+data2(4).depth = depth;
+data(4).pop = fsi_mean_fsi1_left_abs_cdf_pop;
+data(4).mn = fsi_mean_fsi1_left_abs_cdf_mn;
+data(4).se = fsi_mean_fsi1_left_abs_cdf_se;
+data(4).ytick = [0:0.01:0.05];
+data(4).yax = [0 0.05];
+
+plot_depth_nonlinearity_params_circle_niceyticks(count, depth, data);
+
+% plot_nonlinearity_bars(data);
+
+return;
+
+
+
+
+
+
+
+
+function plot_nonlinearity_bars(figstr)
+
+supra = [0 600];
+gran = [700 1100];
+infra = [1200 1850];
+
+% Could also try 0-600, 700-1100, 1200-1900, to be safe
+
+position = figstr(2).position;
+mid1_asi = figstr(2).data;
+mid2_asi = figstr(3).data;
+sepindex = figstr(4).data;
+mid1_si = figstr(5).data;
+mid2_si = figstr(6).data;
+
+
+index_supra = find( position >= supra(1) & position <= supra(2) );
+index_gran = find( position > gran(1) & position <= gran(2) );
+index_infra = find( position > infra(1) & position <= infra(2) );
+
+
+% MID1 Nonlinearity Asymmetry Index
+% -----------------------------------------
+mid1_asi_supra = mid1_asi( index_supra );
+mid1_asi_mn_supra = mean( mid1_asi(index_supra) );
+mid1_asi_se_supra = std( mid1_asi_supra ) / sqrt( length( mid1_asi_supra ) );
+
+mid1_asi_gran = mid1_asi( index_gran );
+mid1_asi_mn_gran = mean( mid1_asi_gran );
+mid1_asi_se_gran = std( mid1_asi_gran ) / sqrt( length( mid1_asi_gran ) );
+
+mid1_asi_infra = mid1_asi( index_infra );
+mid1_asi_mn_infra = mean( mid1_asi_infra );
+mid1_asi_se_infra = std( mid1_asi_infra ) / sqrt( length( mid1_asi_infra ) );
+
+
+% MID2 Nonlinearity Asymmetry Index
+% -----------------------------------------
+mid2_asi_supra = mid2_asi( index_supra );
+mid2_asi_mn_supra = mean( mid2_asi(index_supra) );
+mid2_asi_se_supra = std( mid2_asi_supra ) / sqrt( length( mid2_asi_supra ) );
+
+mid2_asi_gran = mid2_asi( index_gran );
+mid2_asi_mn_gran = mean( mid2_asi_gran );
+mid2_asi_se_gran = std( mid2_asi_gran ) / sqrt( length( mid2_asi_gran ) );
+
+mid2_asi_infra = mid2_asi( index_infra );
+mid2_asi_mn_infra = mean( mid2_asi_infra );
+mid2_asi_se_infra = std( mid2_asi_infra ) / sqrt( length( mid2_asi_infra ) );
+
+
+% MID1,2 2D Nonlinearity Inseparability
+% -----------------------------------------
+
+sepindex_supra = sepindex( index_supra );
+sepindex_mn_supra = mean( sepindex(index_supra) );
+sepindex_se_supra = std( sepindex_supra ) / sqrt( length( sepindex_supra ) );
+
+sepindex_gran = sepindex( index_gran );
+sepindex_mn_gran = mean( sepindex_gran );
+sepindex_se_gran = std( sepindex_gran ) / sqrt( length( sepindex_gran ) );
+
+sepindex_infra = sepindex( index_infra );
+sepindex_mn_infra = mean( sepindex_infra );
+sepindex_se_infra = std( sepindex_infra ) / sqrt( length( sepindex_infra ) );
+
+
+% MID1 Separability Index
+% -----------------------------------------
+mid1_si_supra = mid1_si( index_supra );
+mid1_si_mn_supra = mean( mid1_si(index_supra) );
+mid1_si_se_supra = std( mid1_si_supra ) / sqrt( length( mid1_si_supra ) );
+
+mid1_si_gran = mid1_si( index_gran );
+mid1_si_mn_gran = mean( mid1_si_gran );
+mid1_si_se_gran = std( mid1_si_gran ) / sqrt( length( mid1_si_gran ) );
+
+mid1_si_infra = mid1_si( index_infra );
+mid1_si_mn_infra = mean( mid1_si_infra );
+mid1_si_se_infra = std( mid1_si_infra ) / sqrt( length( mid1_si_infra ) );
+
+
+% MID2 Separability Index
+% -----------------------------------------
+mid2_si_supra = mid2_si( index_supra );
+mid2_si_mn_supra = mean( mid2_si(index_supra) );
+mid2_si_se_supra = std( mid2_si_supra ) / sqrt( length( mid2_si_supra ) );
+
+mid2_si_gran = mid2_si( index_gran );
+mid2_si_mn_gran = mean( mid2_si_gran );
+mid2_si_se_gran = std( mid2_si_gran ) / sqrt( length( mid2_si_gran ) );
+
+mid2_si_infra = mid2_si( index_infra );
+mid2_si_mn_infra = mean( mid2_si_infra );
+mid2_si_se_infra = std( mid2_si_infra ) / sqrt( length( mid2_si_infra ) );
+
+
+
+%---------------------------------------------------------------
+% Statistical Tests
+%---------------------------------------------------------------
+
+
+% MID1 Nonlinearity Asymmetry
+%---------------------------------------------------------------
+[h1, psg, ci1] = ttest2(mid1_asi_supra, mid1_asi_gran);
+[h1, pig, ci1] = ttest2(mid1_asi_infra, mid1_asi_gran);
+[h1, psi, ci1] = ttest2(mid1_asi_supra, mid1_asi_infra);
+
+fprintf('\n\n');
+fprintf('MID1 Nonlinearity Asymmetry Index\n');
+fprintf('-------------------------------\n');
+fprintf('Supra/Gran:  Mean:  %.2f/%.2f  Pval = %.04f\n', mid1_asi_mn_supra, mid1_asi_mn_gran, psg);
+fprintf('Infra/Gran:  Mean:  %.2f/%.2f  Pval = %.04f\n', mid1_asi_mn_infra, mid1_asi_mn_gran, pig);
+fprintf('Supra/Infra: Mean:  %.2f/%.2f  Pval = %.04f\n', mid1_asi_mn_supra, mid1_asi_mn_infra, psi);
+
+
+
+% MID2 Nonlinearity Asymmetry
+%---------------------------------------------------------------
+[h1, psg, ci1] = ttest2(mid2_asi_supra, mid2_asi_gran);
+[h1, pig, ci1] = ttest2(mid2_asi_infra, mid2_asi_gran);
+[h1, psi, ci1] = ttest2(mid2_asi_supra, mid2_asi_infra);
+
+fprintf('\n\n');
+fprintf('MID2 Nonlinearity Asymmetry Index\n');
+fprintf('-------------------------------\n');
+fprintf('Supra/Gran:  Mean:  %.2f/%.2f  Pval = %.04f\n', mid2_asi_mn_supra, mid2_asi_mn_gran, psg);
+fprintf('Infra/Gran:  Mean:  %.2f/%.2f  Pval = %.04f\n', mid2_asi_mn_infra, mid2_asi_mn_gran, pig);
+fprintf('Supra/Infra: Mean:  %.2f/%.2f  Pval = %.04f\n', mid2_asi_mn_supra, mid2_asi_mn_infra, psi);
+
+
+
+% MID1,2 Nonlinearity Inseparability
+%---------------------------------------------------------------
+[h1, psg, ci1] = ttest2(sepindex_supra, sepindex_gran);
+[h1, pig, ci1] = ttest2(sepindex_infra, sepindex_gran);
+[h1, psi, ci1] = ttest2(sepindex_supra, sepindex_infra);
+
+fprintf('\n\n');
+fprintf('2D Nonlinearity Inseparability Index\n');
+fprintf('-------------------------------\n');
+fprintf('Supra/Gran:  Mean:  %.2f/%.2f  Pval = %.04f\n', sepindex_mn_supra, sepindex_mn_gran, psg);
+fprintf('Infra/Gran:  Mean:  %.2f/%.2f  Pval = %.04f\n', sepindex_mn_infra, sepindex_mn_gran, pig);
+fprintf('Supra/Infra: Mean:  %.2f/%.2f  Pval = %.04f\n', sepindex_mn_supra, sepindex_mn_infra, psi);
+
+
+% MID1 Separability Index
+%---------------------------------------------------------------
+[h1, psg, ci1] = ttest2(mid1_si_supra, mid1_si_gran);
+[h1, pig, ci1] = ttest2(mid1_si_infra, mid1_si_gran);
+[h1, psi, ci1] = ttest2(mid1_si_supra, mid1_si_infra);
+
+fprintf('\n\n');
+fprintf('MID1 Separability Index\n');
+fprintf('-------------------------------\n');
+fprintf('Supra/Gran:  Mean:  %.2f/%.2f  Pval = %.04f\n', mid1_si_mn_supra, mid1_si_mn_gran, psg);
+fprintf('Infra/Gran:  Mean:  %.2f/%.2f  Pval = %.04f\n', mid1_si_mn_infra, mid1_si_mn_gran, pig);
+fprintf('Supra/Infra: Mean:  %.2f/%.2f  Pval = %.04f\n', mid1_si_mn_supra, mid1_si_mn_infra, psi);
+
+
+
+% MID2 Separability Index
+%---------------------------------------------------------------
+[h1, psg, ci1] = ttest2(mid2_si_supra, mid2_si_gran);
+[h1, pig, ci1] = ttest2(mid2_si_infra, mid2_si_gran);
+[h1, psi, ci1] = ttest2(mid2_si_supra, mid2_si_infra);
+
+fprintf('\n\n');
+fprintf('MID2 Separability Index\n');
+fprintf('-------------------------------\n');
+fprintf('Supra/Gran:  Mean:  %.2f/%.2f  Pval = %.04f\n', mid2_si_mn_supra, mid2_si_mn_gran, psg);
+fprintf('Infra/Gran:  Mean:  %.2f/%.2f  Pval = %.04f\n', mid2_si_mn_infra, mid2_si_mn_gran, pig);
+fprintf('Supra/Infra: Mean:  %.2f/%.2f  Pval = %.04f\n', mid2_si_mn_supra, mid2_si_mn_infra, psi);
+
+
+%-----------------------------------------------------------
+% Bar graph of results
+%-----------------------------------------------------------
+
+figure;
+
+subplot(5,1,1);
+hb = bar(1:5, [0 mid1_asi_mn_supra mid1_asi_mn_gran mid1_asi_mn_infra 0]);
+set(hb, 'facecolor', [0.6 0.6 0.6]);
+set(gca,'xticklabel', {'', 'Supra', 'Gran', 'Infra', ''});
+set(gca,'tickdir', 'out');
+box('off');
+set(gca,'ytick', 0.4:0.05:0.65, 'yticklabel', 0.4:0.05:0.65);
+xlim([1 5]);
+ylim([0.4 0.67]);
+ylabel('MID1 ASI');
+
+title(sprintf('S=[%.0f %.0f], G=[%.0f %.0f], I=[%.0f %.0f]', ...
+   supra(1), supra(2), gran(1), gran(2), infra(1), infra(2) ) );
+
+
+
+subplot(5,1,2);
+hb = bar(1:5, [0 mid2_asi_mn_supra mid2_asi_mn_gran mid2_asi_mn_infra 0]);
+set(hb, 'facecolor', [0.6 0.6 0.6]);
+set(gca,'xticklabel', {'', 'Supra', 'Gran', 'Infra', ''});
+set(gca,'tickdir', 'out');
+box('off');
+set(gca,'ytick', -0.1:0.05:0.1, 'yticklabel', -0.1:0.05:0.1);
+xlim([1 5]);
+ylim([-0.1 0.1]);
+ylabel('MID2 ASI');
+
+
+subplot(5,1,3);
+hb = bar(1:5, [0 sepindex_mn_supra sepindex_mn_gran sepindex_mn_infra 0]);
+set(hb, 'facecolor', [0.6 0.6 0.6]);
+set(gca,'xticklabel', {'', 'Supra', 'Gran', 'Infra', ''});
+set(gca,'tickdir', 'out');
+box('off');
+set(gca,'ytick', 0:0.05:0.35, 'yticklabel', 0:0.05:0.35);
+xlim([1 5]);
+ylim([0.15 0.32]);
+ylabel(sprintf('2D Nonlinearity\nInseparability Index'));
+
+
+subplot(5,1,4);
+hb = bar(1:5, [0 mid1_si_mn_supra mid1_si_mn_gran mid1_si_mn_infra 0]);
+set(hb, 'facecolor', [0.6 0.6 0.6]);
+set(gca,'xticklabel', {'', 'Supra', 'Gran', 'Infra', ''});
+set(gca,'tickdir', 'out');
+box('off');
+set(gca,'ytick', 0:0.1:0.6, 'yticklabel', 0:0.1:0.6);
+xlim([1 5]);
+ylim([0.2 0.55]);
+ylabel('MID1 SI');
+
+
+
+subplot(5,1,5);
+hb = bar(1:5, [0 mid2_si_mn_supra mid2_si_mn_gran mid2_si_mn_infra 0]);
+set(hb, 'facecolor', [0.6 0.6 0.6]);
+set(gca,'xticklabel', {'', 'Supra', 'Gran', 'Infra', ''});
+set(gca,'tickdir', 'out');
+box('off');
+set(gca,'ytick', 0:0.1:0.5, 'yticklabel', 0:0.1:0.5);
+xlim([1 5]);
+ylim([0.1 0.3]);
+ylabel('MID2 SI');
+
+set(gcf,'position', [250 160 700 700]);
+print_mfilename(mfilename);
+
+return;
+
+
+
+
+
+function plot_depth_nonlinearity_params_circle_niceyticks(count, depth, data)
+
+
+figure;
+
+for i = 1:length(data)
+
+   pop = data(i).pop;
+   mn = data(i).mn;
+   se = data(i).se;
+   ytick = data(i).ytick;
+   yax = data(i).yax;
+   titlestr = data(i).title;
+
+   subplot(length(data),1,i);
+   h = errorbar( depth, mn, se, 'ko-' );
+   set(h, 'linewidth', 0.5, 'markersize', 3, 'markerfacecolor', [0.7 0.7 0.7], ...
+   'markeredgecolor', [0.7 0.7 0.7]);
+
+% get(h(2))
+
+%    edata = get(h(1), 'xdata');
+%    edata(4:9:end) = edata(1:9:end) - 0;
+%    edata(7:9:end) = edata(1:9:end) - 0;
+%    edata(5:9:end) = edata(1:9:end) + 0;
+%    edata(8:9:end) = edata(1:9:end) + 0;
+%    set(h(1), 'xdata', edata);
+
+% pause
+
+%    hc = get(h,'children')
+%    edata = get(hc(2), 'xdata');
+%    edata(4:9:end) = edata(1:9:end) - 0;
+%    edata(7:9:end) = edata(1:9:end) - 0;
+%    edata(5:9:end) = edata(1:9:end) + 0;
+%    edata(8:9:end) = edata(1:9:end) + 0;
+%    set(hc(2), 'xdata', edata);
+
+   xrange = max(depth)-min(depth);
+   xmax = max(depth);
+   xmin = min(depth);
+   xlim([xmin - 0.055*xrange xmax+0.055*xmax]);
+   set(gca,'xtick', depth, 'xticklabel', depth/1000);
+
+   temp_plus = mn + se;
+   temp_minus = mn - se;
+   yrange = max(temp_plus) - min(temp_minus);
+   ymax = max(temp_plus) + 0.06*yrange;
+   ymin = min(temp_minus) - 0.06*yrange;
+%    ylim([ymin ymax]);
+   ylim(yax);
+%    ytick = linspace(ymin,ymax,5);
+   set(gca, 'ytick', ytick, 'yticklabel', ytick);
+
+   set(gca, 'tickdir', 'out');
+   set(gca, 'ticklength', [0.02 0.02]);
+
+%    set(gca, 'box', 'off');
+%    xlabel('Depth (mm)');
+%    ylabel(titlestr);
+%    if ( i == 1 )
+%       title(sprintf('%.0f  ', count));
+%    end
+
+
+   set(gca, 'box', 'off');
+   xlabel('Depth (mm)');
+   ylabel(titlestr);
+   if ( i == 1 )
+      title(sprintf('%.0f  ', count));
+   end
+
+   if ( i == 2 )
+      title(sprintf('%.0f  ', depth));
+   end
+
+end
+
+print_mfilename(mfilename);
+set(gcf,'position', [320 100 670 850]);
+
+
+return;
+
+

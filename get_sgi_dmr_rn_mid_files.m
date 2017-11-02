@@ -1,0 +1,285 @@
+function filestruct = get_sgi_dmr_rn_mid_files(pfile)
+% get_rippledir_detailed_mid_files - put MID data files into a struct array
+%    so data can be analysed
+%
+% filestruct = get_rippledir_detailed_mid_files(location, x0, nh, nlags)
+%
+% The folder C:\MATLAB65\work\tatyana\Filters contains all the data from
+% Tatyana's maximally informative dimensions analysis. This function goes
+% through that folder, extracts all the files for one location, and then
+% creates a struct array of the file information, where each element of the
+% struct array corresponds to one single unit in the location.
+%
+% location, for auditory cortex : a scalar. May be 500, 515, 516, 517, 519, 
+% 532, 534, 537, 602, 603, 604, 608, 609, 611, 614, or 616.
+%
+% For ICC:
+%
+%     Experiment/Site         Location       x0
+%     -----------------------------------------
+%     2003-11-24 site7        707            20
+%     2003-11-24 site8        708            20
+%     2003-11-24 site9        709            20
+%     2003-11-24 site14       714            35
+%     2003-11-19 site1        701            1
+%     2004-2-17 site1         2171           22    units 25, 26, 27, 31
+%     2004-2-17 site1         2171           20    units 30, 33, 34, 35
+%     2004-2-17 site12        21712          22
+%
+% nh = 25 and nlags = 20, in all cases except 21712.
+%
+% caa 4/11/06
+
+if ( nargin  > 1 )
+   error('You need 0 or 1 input arg.');
+end
+
+if ( nargin == 0 )
+   paramfile = dir(['ripple_params*_1.txt']);
+end
+
+if ( nargin == 1 )
+   paramfile.name = pfile;
+end
+
+
+
+% Define a struct to hold the results
+filestruct = struct(...
+'sprfile',         [], ...
+'iskfile',         [], ...
+'location',        [], ...
+'site',            [], ...
+'unit',            [], ...
+'nfaxis',          [], ...
+'x0',              [], ...
+'ntrials',         [], ...
+'mid1reps',        [], ...
+'mid2reps',        [], ...
+'exp',             [], ...
+'depth',           [], ...
+'atten',           [], ...
+'stim',            [], ...
+'nh',              [], ...
+'nv',              [], ...
+'nlags',           [], ...
+'tbins',           [], ...
+'fbins',           [], ...
+'rpsta',           [], ...
+'rpx1pxpxt_sta',   [], ...
+'rpdbest1_v1',     [], ...
+'rpdbest1_v2',     [], ...
+'rpdtest1_v1',     [], ...
+'rpdtest1_v2',     [], ...
+'rpdx1x2px_pxt_1', [], ...
+'rpdbest2_v1',     [], ...
+'rpdbest2_v2',     [], ...
+'rpdtest2_v1',     [], ...
+'rpdtest2_v2',     [], ...
+'rpdx1x2px_pxt_2', []);
+
+
+filestruct = [];
+
+
+for i = 1:length(paramfile)
+
+   pfile = paramfile(i).name;
+
+   fid = fopen(pfile);
+
+   sprfile = fgetl(fid);
+   iskfile = fgetl(fid);
+   location = str2double( fgetl(fid) );
+   site = str2double( fgetl(fid) );
+   unit = str2double( fgetl(fid) );
+   nfaxis = str2double( fgetl(fid) );
+   x0 = str2double( fgetl(fid) );
+   ntrials = str2double( fgetl(fid) );
+   mid1reps = str2double( fgetl(fid) );
+   mid2reps = str2double( fgetl(fid) );
+
+   fclose(fid);
+
+
+   % Get the exp, depth, atten, and stim
+   index = findstr(iskfile, '-');
+   indsite = findstr(iskfile, 'site');
+   indum = findstr(iskfile, 'um');
+   inddb = findstr(iskfile, 'db');
+   indfs = findstr(iskfile, 'fs');
+
+   exp = iskfile(1:indsite-2);
+   depth = str2double( iskfile(indum-4:indum-1) );
+   atten = str2double( iskfile(inddb-2:inddb-1) );
+   stim = iskfile(inddb+3:indfs-2);
+
+   % If rpdtest2_v2 exists, then we have run the code for two mids
+   datfile = dir(['rpdtest2_v2_' num2str(location) '_' num2str(site) '_' num2str(unit) '*_1.dat']);
+
+
+   if ( isempty(datfile) )
+      error('That location does not exist.');
+   end
+
+   file = datfile(1).name;
+   index = findstr(file,'x');
+   fbins = str2double( file(index(1)+1:index(2)-1) );
+   tbins = str2double( file(index(2)+1:index(2)+2) );
+
+   nh = fbins;
+   nlags = tbins;
+   nv = 1;
+
+   filestruct(i).sprfile = sprfile;
+   filestruct(i).iskfile = iskfile;
+   filestruct(i).location = location;
+
+   filestruct(i).site = site;
+   filestruct(i).unit = unit;
+   filestruct(i).nfaxis = nfaxis;
+
+   filestruct(i).x0 = x0;
+   filestruct(i).ntrials = ntrials;
+   filestruct(i).mid1reps = mid1reps;
+   filestruct(i).mid2reps = mid2reps;
+
+   filestruct(i).exp = exp;
+   filestruct(i).depth = depth;
+   filestruct(i).atten = atten;
+   filestruct(i).stim = stim;
+   
+   filestruct(i).nh = nh;
+   filestruct(i).nlags = nlags;
+   filestruct(i).nv = nv;
+   filestruct(i).tbins = tbins;
+   filestruct(i).fbins = fbins;
+
+
+   % The RPSTA Files
+   %=================================================================
+
+   % Get the STA files
+   dfile = dir(['rpsta_' num2str(location) '_' num2str(site) '_' num2str(unit) '_*.dat']);
+   if ( ~isempty(dfile) && length(dfile) == 4 )
+      filestruct(i).rpsta{1} = dfile(1).name;
+      filestruct(i).rpsta{2} = dfile(2).name;
+      filestruct(i).rpsta{3} = dfile(3).name;
+      filestruct(i).rpsta{4} = dfile(4).name;
+   end
+
+
+   % Get the STA input/output function files
+   dfile = dir(['rpx1pxpxt_sta_' num2str(location) '_' num2str(site) '_' num2str(unit) '_*.dat']);
+   if ( ~isempty(dfile) && length(dfile) == 4 )
+      filestruct(i).rpx1pxpxt_sta{1} = dfile(1).name;
+      filestruct(i).rpx1pxpxt_sta{2} = dfile(2).name;
+      filestruct(i).rpx1pxpxt_sta{3} = dfile(3).name;
+      filestruct(i).rpx1pxpxt_sta{4} = dfile(4).name;
+   end
+
+
+   % The rpdtest1, rpdbest1, nonlinearity files
+   %=================================================================
+
+   dfile = dir(['rpdtest1_v1_' num2str(location) '_' num2str(site) '_' num2str(unit) '_*.dat']);
+   if ( ~isempty(dfile) && length(dfile) == 4 )
+      filestruct(i).rpdtest1_v1{1} = dfile(1).name;
+      filestruct(i).rpdtest1_v1{2} = dfile(2).name;
+      filestruct(i).rpdtest1_v1{3} = dfile(3).name;
+      filestruct(i).rpdtest1_v1{4} = dfile(4).name;
+   end
+
+
+   dfile = dir(['rpdtest1_v2_' num2str(location) '_' num2str(site) '_' num2str(unit) '_*.dat']);
+   if ( ~isempty(dfile) && length(dfile) == 4 )
+      filestruct(i).rpdtest1_v2{1} = dfile(1).name;
+      filestruct(i).rpdtest1_v2{2} = dfile(2).name;
+      filestruct(i).rpdtest1_v2{3} = dfile(3).name;
+      filestruct(i).rpdtest1_v2{4} = dfile(4).name;
+   end
+
+
+   dfile = dir(['rpdbest1_v1_' num2str(location) '_' num2str(site) '_' num2str(unit) '_*.dat']);
+   if ( ~isempty(dfile) && length(dfile) == 4 )
+      filestruct(i).rpdbest1_v1{1} = dfile(1).name;
+      filestruct(i).rpdbest1_v1{2} = dfile(2).name;
+      filestruct(i).rpdbest1_v1{3} = dfile(3).name;
+      filestruct(i).rpdbest1_v1{4} = dfile(4).name;
+   end
+
+
+   dfile = dir(['rpdbest1_v2_' num2str(location) '_' num2str(site) '_' num2str(unit) '_*.dat']);
+   if ( ~isempty(dfile) && length(dfile) == 4 )
+      filestruct(i).rpdbest1_v2{1} = dfile(1).name;
+      filestruct(i).rpdbest1_v2{2} = dfile(2).name;
+      filestruct(i).rpdbest1_v2{3} = dfile(3).name;
+      filestruct(i).rpdbest1_v2{4} = dfile(4).name;
+   end
+
+
+   dfile = dir(['rpdx1x2px_pxt_1_' num2str(location) '_' num2str(site) '_' num2str(unit) '_*.dat']);
+   if ( ~isempty(dfile) && length(dfile) == 4 )
+      filestruct(i).rpdx1x2px_pxt_1{1} = dfile(1).name;
+      filestruct(i).rpdx1x2px_pxt_1{2} = dfile(2).name;
+      filestruct(i).rpdx1x2px_pxt_1{3} = dfile(3).name;
+      filestruct(i).rpdx1x2px_pxt_1{4} = dfile(4).name;
+   end
+
+
+
+   % The rpdtest2, rpdbest2, nonlinearity files
+   %=================================================================
+
+   dfile = dir(['rpdtest2_v1_' num2str(location) '_' num2str(site) '_' num2str(unit) '_*.dat']);
+   if ( ~isempty(dfile) && length(dfile) == 4 )
+      filestruct(i).rpdtest2_v1{1} = dfile(1).name;
+      filestruct(i).rpdtest2_v1{2} = dfile(2).name;
+      filestruct(i).rpdtest2_v1{3} = dfile(3).name;
+      filestruct(i).rpdtest2_v1{4} = dfile(4).name;
+   end
+
+
+   dfile = dir(['rpdtest2_v2_' num2str(location) '_' num2str(site) '_' num2str(unit) '_*.dat']);
+   if ( ~isempty(dfile) && length(dfile) == 4 )
+      filestruct(i).rpdtest2_v2{1} = dfile(1).name;
+      filestruct(i).rpdtest2_v2{2} = dfile(2).name;
+      filestruct(i).rpdtest2_v2{3} = dfile(3).name;
+      filestruct(i).rpdtest2_v2{4} = dfile(4).name;
+   end
+
+
+   dfile = dir(['rpdbest2_v1_' num2str(location) '_' num2str(site) '_' num2str(unit) '_*.dat']);
+   if ( ~isempty(dfile) && length(dfile) == 4 )
+      filestruct(i).rpdbest2_v1{1} = dfile(1).name;
+      filestruct(i).rpdbest2_v1{2} = dfile(2).name;
+      filestruct(i).rpdbest2_v1{3} = dfile(3).name;
+      filestruct(i).rpdbest2_v1{4} = dfile(4).name;
+   end
+
+
+   dfile = dir(['rpdbest2_v2_' num2str(location) '_' num2str(site) '_' num2str(unit) '_*.dat']);
+   if ( ~isempty(dfile) && length(dfile) == 4 )
+      filestruct(i).rpdbest2_v2{1} = dfile(1).name;
+      filestruct(i).rpdbest2_v2{2} = dfile(2).name;
+      filestruct(i).rpdbest2_v2{3} = dfile(3).name;
+      filestruct(i).rpdbest2_v2{4} = dfile(4).name;
+   end
+
+
+   dfile = dir(['rpd_x1x2px_pxt_2_' num2str(location) '_' num2str(site) '_' num2str(unit) '_*.dat']);
+   if ( ~isempty(dfile) && length(dfile) == 4 )
+      filestruct(i).rpdx1x2px_pxt_2{1} = dfile(1).name;
+      filestruct(i).rpdx1x2px_pxt_2{2} = dfile(2).name;
+      filestruct(i).rpdx1x2px_pxt_2{3} = dfile(3).name;
+      filestruct(i).rpdx1x2px_pxt_2{4} = dfile(4).name;
+   end
+
+end % (for ii)
+
+return;
+
+
+
+
+

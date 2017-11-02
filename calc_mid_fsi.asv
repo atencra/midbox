@@ -1,0 +1,365 @@
+function cc = calc_mid_fsi(mid, spk, trigger, sprfile)
+% calc_mid_fsi - compute correlation between MIDs and stimuli.
+%
+% cc = calc_mid_fsi(mid, spk, trigger, sprfile)
+%
+% For each MID, the stimuli that
+% elicit a spike are correlated with each filter, and the correlation 
+% values, or similarity index values, are saved. Also, a spike train of 
+% 50,000 random spikes is created and the stimuli associated with the 
+% spikes are also projected onto each filter.
+%
+% Later, we will use the correlation coefficient values to calculate the
+% feature selectivity index for each MID.
+%
+% mid holds the filters, while spk and trigger contain the spike trains
+% and stimulus trigger times. The struct array is saved in files of the
+% form nonlinearity_params_*.mat
+%
+% cc is a struct array holding all the projection data.
+%
+% The sprfile for the data is either  
+%
+% sprfile = 'dmr-500flo-20000fhi-4SM-40TM-40db-44khz-10DF-15min_DFt22_DFf7.spr';
+%
+% or
+%
+% sprfile =
+%
+% 'dmr-500flo-40000fhi-4SM-40TM-40db-96khz-48DF-21min_DFt10_DFf8.spr'
+%
+% caa 3/3/09
+
+if ( length(mid) ~= length(spk) )
+   error('mid and spk need to match.');
+end
+
+if ( ~strcmp(mid(1).exp,spk(1).exp) | mid(1).site~=spk(1).site | ...
+     mid(1).chan~=spk(1).chan | mid(1).model~=spk(1).model | ...
+     ~strcmp(mid(end).exp,spk(end).exp) | mid(end).site~=spk(end).site | ...
+     mid(end).chan~=spk(end).chan | mid(end).model~=spk(end).model )
+   error('The elements of mid and spk do not match.');
+end
+
+
+T1 = 0.005; % 5 ms 
+T2 = 0.095; % 95 ms - inclusively, this comes to 20 bins
+
+i1 = findstr(sprfile,'-');
+i2 = findstr(sprfile,'SM');
+i3 = findstr(sprfile,'TM');
+i4 = findstr(sprfile,'db');
+
+sm = str2num(sprfile(i2(end)-1));
+tm = str2num(sprfile(i3(end)-2:i3(end)-1));
+mdb = str2num(sprfile(i4(end)-2:i4(end)-1));
+
+atten = spk(1).atten;
+fs = spk(1).fs;
+spl = 105 - atten;
+
+stype = spk(1).stim;
+
+if ( ~isempty(findstr(stype,'dmr')) )
+   snd = 'MR';
+elseif ( ~isempty(findstr(stype,'rn')) )
+   snd = 'RN';
+else
+   error('stim in struct array "spk" must be "dmr" or "rn".');
+end
+
+modtype = 'dB';
+nblocks = 500;  % update display every 50 blocks
+
+
+% cc = struct(...
+% 'exp',        [], ...
+% 'site',       [], ...
+% 'chan',       [], ...
+% 'model',      [], ...
+% 'depth',      [], ...
+% 'position',   [], ...
+% 'stim',       [], ...
+% 'atten',      [], ...
+% 'spl',        [], ...
+% 'sm',         [], ...
+% 'tm',         [], ...
+% 'mdb',        [], ...
+% 'trigger',    [], ...
+% 'spetrand',   [], ...
+% 'x1rand_mean',  [], ...
+% 'x2rand_mean',  [], ...
+% 'x1spk_mean',   [], ...
+% 'x2spk_mean',   [], ...
+% 'x1rand_part1', [], ...
+% 'x2rand_part1', [], ...
+% 'x1spk_part1',  [], ...
+% 'x2spk_part1',  [], ...
+% 'x1rand_part2', [], ...
+% 'x2rand_part2', [], ...
+% 'x1spk_part2',  [], ...
+% 'x2spk_part2',  [], ...
+% 'x1rand_part3', [], ...
+% 'x2rand_part3', [], ...
+% 'x1spk_part3',  [], ...
+% 'x2spk_part3',  [], ...
+% 'x1rand_part4', [], ...
+% 'x2rand_part4', [], ...
+% 'x1spk_part4',  [], ...
+% 'x2spk_part4',  []);
+
+
+
+% For experiments up to 2003-4-8, tbins = 20 and fbins = 25. For
+% experiments after this tbins = 20 and fbins = 30;
+tbins = mid(1).tbins;
+fbins = mid(1).fbins;
+
+
+% create random spike train with 50,000 spikes
+mintrig = trigger(3);
+maxtrig = trigger(end-3);
+spetrand = ceil( (maxtrig-mintrig) * rand(1,50000) + mintrig );
+[spetrand, temp] = sort(spetrand);
+
+for i = 1:length(mid)
+
+   sp = spk(i).spiketimes;
+   spet = round(sp / 1000 * fs); % convert ms to sample number
+
+
+   % First get mean filters:
+   % ----------------------------------------------------------------
+   mid1vec = mid(i).rpdtest2_v1.filter;
+   mid1 = reshape(mid1vec, fbins, tbins);
+
+   mid2vec = mid(i).rpdtest2_v2.filter;
+   mid2 = reshape(mid2vec, fbins, tbins);
+
+fbins
+tbins
+imagesc(mid1)
+pause
+
+
+   % Calc similarity indices for 50,000 random spikes 
+   % ----------------------------------------------------------------
+
+sprfile
+T1
+T2
+size(spetrand)
+
+   [x1rand_mean, dummy] = mid_cc(mid1, sprfile, T1, T2, spetrand, trigger, fs, spl, mdb);
+
+   [x2rand_mean, dummy] = mid_cc(mid2, sprfile, T1, T2, spetrand, trigger, fs, spl, mdb);
+
+
+   % Calc similarity indices using original spike train
+   % ----------------------------------------------------------------
+
+   [x1spk_mean, dummy] = mid_cc(mid1, sprfile, T1, T2, spet, trigger, fs, spl, mdb);
+
+   [x2spk_mean, dummy] = mid_cc(mid2, sprfile, T1, T2, spet, trigger, fs, spl, mdb);
+
+
+
+   % Do it for filters computed for different segments of the data:
+
+   % For Part 1:
+   % ----------------------------------------------------------------
+   mid1vec = mid(i).rpdtest2_v1.mtx(:,1);
+   mid1 = reshape(mid1vec, fbins, tbins);
+
+   mid2vec = mid(i).rpdtest2_v2.mtx(:,1);
+   mid2 = reshape(mid2vec, fbins, tbins);
+
+   [x1rand_part1, dummy] = mid_cc(mid1, sprfile, T1, T2, spetrand, trigger, fs, spl, mdb);
+
+   [x2rand_part1, dummy] = mid_cc(mid2, sprfile, T1, T2, spetrand, trigger, fs, spl, mdb);
+
+   [x1spk_part1, dummy] = mid_cc(mid1, sprfile, T1, T2, spet, trigger, fs, spl, mdb);
+
+   [x2spk_part1, dummy] = mid_cc(mid2, sprfile, T1, T2, spet, trigger, fs, spl, mdb);
+
+
+
+   % For Part 2:
+   % ----------------------------------------------------------------
+   mid1vec = mid(i).rpdtest2_v1.mtx(:,2);
+   mid1 = reshape(mid1vec, fbins, tbins);
+
+   mid2vec = mid(i).rpdtest2_v2.mtx(:,2);
+   mid2 = reshape(mid2vec, fbins, tbins);
+
+   [x1rand_part2, dummy] = mid_cc(mid1, sprfile, T1, T2, spetrand, trigger, fs, spl, mdb);
+
+   [x2rand_part2, dummy] = mid_cc(mid2, sprfile, T1, T2, spetrand, trigger, fs, spl, mdb);
+
+   [x1spk_part2, dummy] = mid_cc(mid1, sprfile, T1, T2, spet, trigger, fs, spl, mdb);
+
+   [x2spk_part2, dummy] = mid_cc(mid2, sprfile, T1, T2, spet, trigger, fs, spl, mdb);
+
+
+
+   % For Part 3:
+   % ----------------------------------------------------------------
+   mid1vec = mid(i).rpdtest2_v1.mtx(:,3);
+   mid1 = reshape(mid1vec, fbins, tbins);
+
+   mid2vec = mid(i).rpdtest2_v2.mtx(:,3);
+   mid2 = reshape(mid2vec, fbins, tbins);
+
+   [x1rand_part3, dummy] = mid_cc(mid1, sprfile, T1, T2, spetrand, trigger, fs, spl, mdb);
+
+   [x2rand_part3, dummy] = mid_cc(mid2, sprfile, T1, T2, spetrand, trigger, fs, spl, mdb);
+
+   [x1spk_part3, dummy] = mid_cc(mid1, sprfile, T1, T2, spet, trigger, fs, spl, mdb);
+
+   [x2spk_part3, dummy] = mid_cc(mid2, sprfile, T1, T2, spet, trigger, fs, spl, mdb);
+
+
+
+   % For Part 4:
+   % ----------------------------------------------------------------
+   mid1vec = mid(i).rpdtest2_v1.mtx(:,4);
+   mid1 = reshape(mid1vec, fbins, tbins);
+
+   mid2vec = mid(i).rpdtest2_v2.mtx(:,4);
+   mid2 = reshape(mid2vec, fbins, tbins);
+
+   [x1rand_part4, dummy] = mid_cc(mid1, sprfile, T1, T2, spetrand, trigger, fs, spl, mdb);
+
+   [x2rand_part4, dummy] = mid_cc(mid2, sprfile, T1, T2, spetrand, trigger, fs, spl, mdb);
+
+   [x1spk_part4, dummy] = mid_cc(mid1, sprfile, T1, T2, spet, trigger, fs, spl, mdb);
+
+   [x2spk_part4, dummy] = mid_cc(mid2, sprfile, T1, T2, spet, trigger, fs, spl, mdb);
+
+
+
+   % Save the data in the struct array proj
+   % ----------------------------------------------------------------
+   cc(i).exp = mid(i).exp;
+   cc(i).site = mid(i).site;
+   cc(i).chan = mid(i).chan;
+   cc(i).model = mid(i).model;
+   cc(i).depth = mid(i).depth;
+   cc(i).position = mid(i).position;
+   cc(i).stim = mid(i).stim;
+   cc(i).atten = mid(i).atten;
+   cc(i).spl = mid(i).spl;
+   cc(i).sm = mid(i).sm;
+   cc(i).tm = mid(i).tm;
+   cc(i).mdb = mid(i).mdb;
+
+   cc(i).trigger = trigger(:);
+   cc(i).spetrand = spetrand(:);
+
+   cc(i).x1rand_mean = x1rand_mean;
+   cc(i).x2rand_mean = x2rand_mean;
+   cc(i).x1spk_mean = x1spk_mean;
+   cc(i).x2spk_mean = x2spk_mean;
+
+   cc(i).x1rand_part1 = x1rand_part1;
+   cc(i).x2rand_part1 = x2rand_part1;
+   cc(i).x1spk_part1 = x1spk_part1;
+   cc(i).x2spk_part1 = x2spk_part1;
+
+   cc(i).x1rand_part2 = x1rand_part2;
+   cc(i).x2rand_part2 = x2rand_part2;
+   cc(i).x1spk_part2 = x1spk_part2;
+   cc(i).x2spk_part2 = x2spk_part2;
+
+   cc(i).x1rand_part3 = x1rand_part3;
+   cc(i).x2rand_part3 = x2rand_part3;
+   cc(i).x1spk_part3 = x1spk_part3;
+   cc(i).x2spk_part3 = x2spk_part3;
+
+   cc(i).x1rand_part4 = x1rand_part4;
+   cc(i).x2rand_part4 = x2rand_part4;
+   cc(i).x1spk_part4 = x1spk_part4;
+   cc(i).x2spk_part4 = x2spk_part4;
+
+
+
+   fprintf('%s - site%.0f - chan%.0f - model%.0f  -  %.0f of %.0f completed.\n', ...
+      spk(i).exp, spk(i).site, spk(i).chan, spk(i).model, i, length(spk));
+   pause(0.5);
+
+end % (for)
+
+
+
+
+return;
+
+
+
+
+%    %=======================================================================
+%    % For the STA:
+%    %=======================================================================
+%    stavec = mid(i).rpsta.filter;
+%    sta = reshape(stavec,fbins,tbins);
+% 
+%    % First we compute the prior distribution of projection values. 
+%    % For this we use the random spike train. 
+%    [xstarand_mean, randspklocation] = get_filter_projection(sta, sprfile, 0.000, 0.100, spetrand, trigger, fs, spl, mdb);
+% 
+% 
+%    % Now we want to find the p(proj|spike), so use the original spike
+%    % train and the original filter
+%    [xstaspk_mean, spklocation] = get_filter_projection(sta, sprfile, 0.000, 0.100, spet, trigger, fs, spl, mdb);
+% 
+% 
+%    % The STA was also calculated 4 times over 3/4 of the data each time. We
+%    % get projections of the stimulus onto these 4 STA's as well.
+% 
+%    % For Part 1:
+%    % ----------------------------------------------------------------
+%    stavec = mid(i).rpsta.mtx(:,1);
+%    sta = reshape(stavec, fbins, tbins);
+%    [xstarand_part1, dummy] = get_filter_projection(sta, sprfile, 0.000, 0.100, spetrand, trigger, fs, spl, mdb);
+%    [xstaspk_part1, dummy] = get_filter_projection(sta, sprfile, 0.000, 0.100, spet, trigger, fs, spl, mdb);
+% 
+% 
+%    % For Part 2:
+%    % ----------------------------------------------------------------
+%    stavec = mid(i).rpsta.mtx(:,2);
+%    sta = reshape(stavec, fbins, tbins);
+%    [xstarand_part2, dummy] = get_filter_projection(sta, sprfile, 0.000, 0.100, spetrand, trigger, fs, spl, mdb);
+%    [xstaspk_part2, dummy] = get_filter_projection(sta, sprfile, 0.000, 0.100, spet, trigger, fs, spl, mdb);
+% 
+% 
+%    % For Part 3:
+%    % ----------------------------------------------------------------
+%    stavec = mid(i).rpsta.mtx(:,3);
+%    sta = reshape(stavec, fbins, tbins);
+%    [xstarand_part3, dummy] = get_filter_projection(sta, sprfile, 0.000, 0.100, spetrand, trigger, fs, spl, mdb);
+%    [xstaspk_part3, dummy] = get_filter_projection(sta, sprfile, 0.000, 0.100, spet, trigger, fs, spl, mdb);
+% 
+% 
+%    % For Part 4:
+%    % ----------------------------------------------------------------
+%    stavec = mid(i).rpsta.mtx(:,4);
+%    sta = reshape(stavec, fbins, tbins);
+%    [xstarand_part4, dummy] = get_filter_projection(sta, sprfile, 0.000, 0.100, spetrand, trigger, fs, spl, mdb);
+%    [xstaspk_part4, dummy] = get_filter_projection(sta, sprfile, 0.000, 0.100, spet, trigger, fs, spl, mdb);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

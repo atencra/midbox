@@ -1,0 +1,282 @@
+function filestruct = get_sgi_mid_files(paramfile)
+% get_rippledir_detailed_mid_files - put MID data files into a struct array
+%    so data can be analysed
+%
+% filestruct = get_rippledir_detailed_mid_files(location, x0, nh, nlags)
+%
+% The folder C:\MATLAB65\work\tatyana\Filters contains all the data from
+% Tatyana's maximally informative dimensions analysis. This function goes
+% through that folder, extracts all the files for one location, and then
+% creates a struct array of the file information, where each element of the
+% struct array corresponds to one single unit in the location.
+%
+% location, for auditory cortex : a scalar. May be 500, 515, 516, 517, 519, 
+% 532, 534, 537, 602, 603, 604, 608, 609, 611, 614, or 616.
+%
+% For ICC:
+%
+%     Experiment/Site         Location       x0
+%     -----------------------------------------
+%     2003-11-24 site7        707            20
+%     2003-11-24 site8        708            20
+%     2003-11-24 site9        709            20
+%     2003-11-24 site14       714            35
+%     2003-11-19 site1        701            1
+%     2004-2-17 site1         2171           22    units 25, 26, 27, 31
+%     2004-2-17 site1         2171           20    units 30, 33, 34, 35
+%     2004-2-17 site12        21712          22
+%
+% nh = 25 and nlags = 20, in all cases except 21712.
+%
+% caa 4/11/06
+
+
+
+
+dmr-500flo-20000fhi-4SM-40TM-40db-44khz-10DF-15min_DFt22_DFf7.spr
+2003-3-5-site32-2357um-30db-dmr2-fs24038-11.isk
+20030305
+32
+11
+33
+8
+181040
+1000
+4000
+1
+
+
+fid = fopen('fgetl.m');
+sprfile = fgetl(fid);
+iskfile = fgetl(fid);
+exp = fgetl(fid);
+site = fgetl(fid);
+unit = fgetl(fid);
+nf = fgetl(fid);
+x0 = fgetl(fid);
+ntrials = fgetl(fid);
+mid1reps = fgetl(fid);
+mid2reps = fgetl(fid);
+
+disp(sprfile)
+disp(iskfil)
+disp(exp)
+disp(site)
+disp(unit)
+disp(nf)
+disp(x0)
+disp(ntrials)
+disp(mid1reps)
+disp(mid2reps)
+
+fclose(fid);
+
+return
+
+
+
+
+
+
+filestruct = [];
+
+if ( nargin < 2 )
+   error('You need at least 2 input args.');
+end
+
+if ( nargin == 2 )
+   nh = 25;
+   nlags = 20;
+end
+
+if ( nargin == 3 )
+   nlags = 20;
+end
+
+if ( nargin > 4 )
+   error('You need 2 to 4 input args.');
+end
+
+
+nv = 1;
+
+
+% dfile = dir(['rpsta_' num2str(location) '*.dat']);
+
+% If rpdtest2_v2 exists, then we have run the code for two mids
+datfile = dir(['rpdtest2_v2_' num2str(location) '*_1.dat']);
+
+
+% rpdtest2_v2_707_1_1x25x20_1_1.dat
+
+if ( isempty(datfile) )
+   error('That location does not exist.');
+end
+
+
+
+file = datfile(1).name;
+index = findstr(file,'x');
+fbins = str2double( file(index(1)+1:index(2)-1) );
+tbins = str2double( file(index(2)+1:index(2)+2) );
+
+
+
+% Define a struct to hold the results
+filestruct = struct(...
+'location',        [], ...
+'unit',            [], ...
+'x0',              [], ...
+'nh',              [], ...
+'nv',              [], ...
+'nlags',           [], ...
+'tbins',           [], ...
+'fbins',           [], ...
+'rpsta',           [], ...
+'rpx1pxpxt_sta',   [], ...
+'rpdbest1_v1',     [], ...
+'rpdbest1_v2',     [], ...
+'rpdbest2_v1',     [], ...
+'rpdbest2_v2',     [], ...
+'rpdtest1_v1',     [], ...
+'rpdtest1_v2',     [], ...
+'rpdtest2_v1',     [], ...
+'rpdtest2_v2',     [], ...
+'rpdx1x2px_pxt_1', [], ...
+'rpdx1x2px_pxt_2', []);
+
+
+for i = 1:length(datfile)
+
+   file = datfile(i).name;
+   index = findstr('_', file);
+
+   site = [str2double(file(index(3)+1:index(4)-1))];
+   unitnum = [str2double(file(index(4)+1:index(5)-1))];
+
+   filestruct(i).location = location;
+   filestruct(i).site = site;
+   filestruct(i).unit = unitnum;
+
+
+dmr-500flo-20000fhi-4SM-40TM-40db-44khz-10DF-15min_DFt22_DFf7.spr
+2003-3-5-site32-2357um-30db-dmr2-fs24038-11.isk
+20030305
+32
+11
+33
+8
+181040
+1000
+4000
+1
+
+   fid = fopen('fgetl.m');
+   while 1
+      tline = fgetl(fid);
+      if ~ischar(tline), break, end
+      disp(tline)
+   end
+   fclose(fid);
+
+return
+
+
+   filestruct(i).x0 = x0;
+   filestruct(i).nh = nh;
+   filestruct(i).nv = nv;
+   filestruct(i).nlags = nlags;
+
+   filestruct(i).tbins = tbins;
+   filestruct(i).fbins = fbins;
+
+
+   % The RPSTA Files
+   %=================================================================
+
+   % Get the STA files
+   dfile = dir(['rpsta_' num2str(location) '_' num2str(unitnum) '_*.dat']);
+   if ( ~isempty(dfile) && length(dfile) == 4 )
+      filestruct(i).rpsta{1} = dfile(1).name;
+      filestruct(i).rpsta{2} = dfile(2).name;
+      filestruct(i).rpsta{3} = dfile(3).name;
+      filestruct(i).rpsta{4} = dfile(4).name;
+   end
+
+
+   % Get the STA input/output function files
+   dfile = dir(['rpx1pxpxt_sta_' num2str(location) '_' num2str(unitnum) '_*.dat']);
+   if ( ~isempty(dfile) && length(dfile) == 4 )
+      filestruct(i).rpx1pxpxt_sta{1} = dfile(1).name;
+      filestruct(i).rpx1pxpxt_sta{2} = dfile(2).name;
+      filestruct(i).rpx1pxpxt_sta{3} = dfile(3).name;
+      filestruct(i).rpx1pxpxt_sta{4} = dfile(4).name;
+   end
+
+
+   % The RPDTEST Files
+   %=================================================================
+
+
+   % Get the MID1 files - First Most Informative Dimension
+   dfile = dir(['rpdtest2_v1_' num2str(location) '_' num2str(unitnum) '_*.dat']);
+   if ( ~isempty(dfile) && length(dfile) == 4 )
+      filestruct(i).rpdtest2_v1{1} = dfile(1).name;
+      filestruct(i).rpdtest2_v1{2} = dfile(2).name;
+      filestruct(i).rpdtest2_v1{3} = dfile(3).name;
+      filestruct(i).rpdtest2_v1{4} = dfile(4).name;
+   end
+
+
+   % Get the MID2 files - First Most Informative Dimension
+   dfile = dir(['rpdtest2_v2_' num2str(location) '_' num2str(unitnum) '_*.dat']);
+   if ( ~isempty(dfile) && length(dfile) == 4 )
+      filestruct(i).rpdtest2_v2{1} = dfile(1).name;
+      filestruct(i).rpdtest2_v2{2} = dfile(2).name;
+      filestruct(i).rpdtest2_v2{3} = dfile(3).name;
+      filestruct(i).rpdtest2_v2{4} = dfile(4).name;
+   end
+
+
+
+   % The RPDBEST Files
+   %=================================================================
+
+
+   % Get the MID1 files - First Most Informative Dimension
+   dfile = dir(['rpdbest2_v1_' num2str(location) '_' num2str(unitnum) '_*.dat']);
+   if ( ~isempty(dfile) && length(dfile) == 4 )
+      filestruct(i).rpdbest2_v1{1} = dfile(1).name;
+      filestruct(i).rpdbest2_v1{2} = dfile(2).name;
+      filestruct(i).rpdbest2_v1{3} = dfile(3).name;
+      filestruct(i).rpdbest2_v1{4} = dfile(4).name;
+   end
+
+
+   % Get the MID2 files - First Most Informative Dimension
+   dfile = dir(['rpdbest2_v2_' num2str(location) '_' num2str(unitnum) '_*.dat']);
+   if ( ~isempty(dfile) && length(dfile) == 4 )
+      filestruct(i).rpdbest2_v2{1} = dfile(1).name;
+      filestruct(i).rpdbest2_v2{2} = dfile(2).name;
+      filestruct(i).rpdbest2_v2{3} = dfile(3).name;
+      filestruct(i).rpdbest2_v2{4} = dfile(4).name;
+   end
+
+
+
+   dfile = dir(['rpd_x1x2px_pxt_2_' num2str(location) '_' num2str(unitnum) '_*.dat']);
+   if ( ~isempty(dfile) && length(dfile) == 4 )
+      filestruct(i).rpdx1x2px_pxt_2{1} = dfile(1).name;
+      filestruct(i).rpdx1x2px_pxt_2{2} = dfile(2).name;
+      filestruct(i).rpdx1x2px_pxt_2{3} = dfile(3).name;
+      filestruct(i).rpdx1x2px_pxt_2{4} = dfile(4).name;
+   end
+
+end % (for ii)
+
+return;
+
+
+
+
+

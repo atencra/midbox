@@ -1,0 +1,666 @@
+function [fio] = get_dat_sta_fio(folder, location, cellnum, nv, nh, coeff, varargin)
+%function [mean_firing, x_mean, ior_mean, ior_std, px_mean, px_std] =
+%get_dat_sta_fio(folder, location, cellnum, nv, nh, coeff, varargin)
+%
+%[mean_firing, x_mean, ior_mean, ior_std, px_mean, px_std] = ...
+%     get_dat_sta_fio(folder, location, cellnum, coeff, Nparts, Nbins, Nbins_short, minpx)
+%
+% summary of changes made to accomodate ripple stimuli(May 31 2005):
+% downsampling in ior2_mean is done by summing pxt within a larger bin, summing px within the 
+% larger bin, and dividing the two numbers, also introduced dx, and probability distribution is now shown as a probability density
+%
+%
+% The function assumes that you have files of the form:
+%
+%     rpx1pxpxt_sta_707_1_1x25x20_1_1.dat            
+%     rpx1pxpxt_sta_707_1_1x25x20_1_2.dat            
+%     rpx1pxpxt_sta_707_1_1x25x20_1_3.dat            
+%     rpx1pxpxt_sta_707_1_1x25x20_1_4.dat     
+%
+% Parts of the file name are variable, such as 707, 25 , 20. These are specified by
+% input arguments.
+%
+% folder : location of data. Example: 'C:\MATLABR2007b\work\data\MID_Inferior_Colliculus\';
+%
+% location : Tanya's site identifier. Examples: 707, 708, 709, etc.
+%
+% cellnum : Tanya's global cell identifier. Examples: 1, 2, 3, ...
+%
+% coeffs : coefficient vector which tells the polarity of the filters
+%
+% Npart = 4 : num of test reps in mid code. Should be 4.
+%
+% Nbins = 21 : num bins used to obtain projection values in mid code
+%
+% Nbins_short = 14 : num bins used to get nonlinearity values
+%
+%
+% If you call get_data_sta_fio.m as
+%
+% [fio] = get_dat_sta_fio(folder, location, cellnum, nv, nh, coeff)
+%
+% then Nparts = 4, Nbins = 21, and Nbins_short = 14 by default.
+%
+% caa 2/17/09
+
+% Parameters that Tatyana uses in her programs
+% Nbins = 21; % used for input/output function but not RF
+% Nbins_short = 14; % used for input/output function but not RF
+% Nparts = 4; % used to identify files, not sure what the significance
+%             % is, though
+
+
+
+%     files{1} = rpx1pxpxt_sta_707_1_1x25x20_1_1.dat            
+%     files{2} = rpx1pxpxt_sta_707_1_1x25x20_1_2.dat            
+%     files{3} = rpx1pxpxt_sta_707_1_1x25x20_1_3.dat            
+%     files{4} = rpx1pxpxt_sta_707_1_1x25x20_1_4.dat     
+
+
+files{1} = sprintf('%srpx1pxpxt_sta_%u_%u_1x%ux%u_1_1.dat', folder, location, cellnum, nv, nh);
+files{2} = sprintf('%srpx1pxpxt_sta_%u_%u_1x%ux%u_1_2.dat', folder, location, cellnum, nv, nh);
+files{3} = sprintf('%srpx1pxpxt_sta_%u_%u_1x%ux%u_1_3.dat', folder, location, cellnum, nv, nh);
+files{4} = sprintf('%srpx1pxpxt_sta_%u_%u_1x%ux%u_1_4.dat', folder, location, cellnum, nv, nh);
+
+files{1}
+pause
+
+
+
+x_mtx = [];
+px_mtx = [];
+ior_mtx = [];
+Nbins_short = 14;
+mean_firing = 0;
+
+% The default for Nparts below was originally 8 in Tanya's original code.
+if isempty(varargin)
+    Nparts = 4;
+    Nbins = 21;
+    minpx = 0;
+elseif length(varargin)==1
+    Nparts = 4;
+    Nbins = varargin{1};
+    minpx = 0;
+elseif length(varargin)==2
+    Nbins = varargin{1};
+    Nparts = varargin{2};
+    minpx = 0;
+elseif length(varargin)==3
+    Nbins = varargin{1};
+    Nparts = varargin{2};
+    Nbins_short = varargin{3};
+    minpx = 0;
+elseif length(varargin)==4
+    Nbins = varargin{1};
+    Nparts = varargin{2};
+    Nbins_short = varargin{3};
+    minpx = varargin{4};
+end
+
+if (length(coeff)~=Nparts) 
+    length(coeff)
+    coeff
+    Nparts
+    display('wrong length of coeff vector');
+    return
+end
+
+if ( Nparts ~= 4 )
+   error('For time being, Nparts must equal 4.');
+end
+
+
+pspk_mtx = [];
+pxspk_mtx = [];
+pspkx_mtx = [];
+
+for i=1:Nparts
+
+    %fname = sprintf('%s_%u.dat',fname_first,i);
+    fp = fopen(files{i},'r');
+
+    if (fp==-1)
+        display('error opening file');
+        display(files{i});
+        pause
+        return
+    end
+
+
+    x = fread(fp,Nbins,'double'); % projection value
+    px = fread(fp,Nbins,'double'); % prob of a projection, p(x)
+
+    ind0 = find( px < minpx );
+    xm = sum( x.*px );
+    x = x - xm; % center the projection values to 0
+
+    pxt = fread(fp,Nbins,'double');
+    pxt(ind0) = 0;
+
+    pxspk_pspk = pxt; % p(x|spk) * p(spk)
+
+    if (abs(sum(px)-1)>0.001) 
+        display(sprintf('sum of px=%f',sum(px))); 
+        return;
+    end
+
+
+    rbar = fread(fp, 1, 'double');
+    pspk = rbar; % p(spk)
+    pxspk = pxspk_pspk ./ pspk; % p(x|spk)
+
+    mean_firing = mean_firing + rbar/Nparts;
+    mean_pspk = mean_firing;
+
+    Nrep_eff = fread(fp,1,'double');
+    fclose(fp);
+
+   x_r = x;
+
+   if ( coeff(i)==1 )
+      ior = pxt ./ (px+eps);
+      pspkx = ior;
+   else 
+      for j = 1:Nbins
+         ior(Nbins+1-j) = pxt(j) / (px(j)+eps);
+      end
+      pspkx = ior;
+      x_r = -x;
+   end
+
+   x_r = reshape(x_r,Nbins,1); % projection value
+   px = reshape(px,Nbins,1);
+   ior = reshape(ior,Nbins,1); % p(spk|x)
+
+   maxior = max(ior);
+   minior = min(ior);
+
+   ior_mtx = [ior_mtx ior]; % matrix of p(spk|x)
+   x_mtx = [x_mtx x_r]; % projection matrix
+   px_mtx = [px_mtx px];
+
+   pxspk = reshape(pxspk, Nbins,1);
+   pspkx = reshape(pspkx, Nbins,1);
+
+   pspk_mtx = [pspk_mtx pspk];
+   pxspk_mtx = [pxspk_mtx pxspk];
+   pspkx_mtx = [pspkx_mtx pspkx];
+    
+end
+
+
+if (isempty(ior_mtx) )
+    display('empty ior_mtx in plot_an_ior');
+    return;
+end
+
+
+ior_mtx = reshape(ior_mtx,Nbins,Nparts);
+
+x0 = min(min(x_mtx));
+x1 = max(max(x_mtx));
+maxmax = max([abs(x0) x1]);
+edges = linspace(-maxmax, maxmax, Nbins_short); % make bounds equal
+
+%edges=linspace(x0,x1,Nbins_short);
+
+ior_rescaled = zeros(Nbins_short-1,Nparts);
+px_rescaled = zeros(Nbins_short-1,Nparts);
+npoints = zeros(Nbins_short-1,Nparts);
+
+for i = 1:Nbins_short-1
+
+    for j = 1:Nparts
+
+        ind = find((x_mtx(:,j)>=edges(i))&(x_mtx(:,j)<edges(i+1)));
+
+        if ( ~isempty(ind) )
+            npoints(i,j) = npoints(i,j)+length(ind);
+            px_rescaled(i,j) = px_rescaled(i,j)+sum(px_mtx(ind,j));
+            ior_rescaled(i,j) = ior_rescaled(i,j)+sum(ior_mtx(ind,j).*px_mtx(ind,j));
+        end
+
+    end
+
+    x_mean(i) = 0.5 * (edges(i)+edges(i+1));
+
+end
+
+ior_rescaled = ior_rescaled ./ (px_rescaled+eps);
+px_mean = mean(px_rescaled');
+
+ior_mean = mean(ior_rescaled');
+
+ior_std = sqrt(var(ior_rescaled') / Nparts);
+px_std = sqrt(var(px_rescaled') / Nparts);    
+
+dx = (max(x_mean)-min(x_mean))/(Nbins_short-1);
+
+px_mean = px_mean ./ dx;
+px_std = px_std ./ dx;
+
+
+% Calculate information values:
+pxs1 = pxspk_mtx(:,1);
+pxs2 = pxspk_mtx(:,2);
+pxs3 = pxspk_mtx(:,3);
+pxs4 = pxspk_mtx(:,4);
+
+px1 = px_mtx(:,1);
+px2 = px_mtx(:,2);
+px3 = px_mtx(:,3);
+px4 = px_mtx(:,4);
+
+ind1 = find(pxs1>0 & px1>0);
+ind2 = find(pxs2>0 & px2>0);
+ind3 = find(pxs3>0 & px3>0);
+ind4 = find(pxs4>0 & px4>0);
+
+info1 = sum( pxs1(ind1) .* log2( pxs1(ind1) ./ px1(ind1) ) );
+info2 = sum( pxs2(ind2) .* log2( pxs2(ind2) ./ px2(ind2) ) );
+info3 = sum( pxs3(ind3) .* log2( pxs3(ind3) ./ px3(ind3) ) );
+info4 = sum( pxs4(ind4) .* log2( pxs4(ind4) ./ px4(ind4) ) );
+
+info = [info1 info2 info3 info4];
+
+
+fio.nbins = Nbins;
+fio.nbins_short = Nbins_short;
+fio.pspk_mtx = pspk_mtx;
+fio.mean_pspk = mean_pspk;
+fio.x_mtx = x_mtx;
+fio.px_mtx = px_mtx;
+fio.pxspk_mtx = pxspk_mtx;
+fio.pspkx_mtx = pspkx_mtx;
+fio.ior_mtx = ior_mtx;
+fio.x_mean = x_mean;
+fio.ior_mean = ior_mean;
+fio.ior_std = ior_std;
+fio.px_mean = px_mean;
+fio.px_std = px_std;
+fio.info = info;
+
+return;
+
+
+function [x1_mtx, px1_mtx, px1spk_mtx, pspk_mtx, pspkx1_mtx, information] = ...
+   get_mid1_information(files, coeff1, coeff2, varargin)
+
+%function [fio] = get_dat_mid1_fio(folder, location, cellnum, nv, nh, coeff1, coeff2, varargin)
+%
+%
+% summary of changes made to accomodate ripple stimuli(May 31 2005):
+% downsampling in ior2_mean is done by summing pxt within a larger bin, summing px within the 
+% larger bin, and dividing the two numbers, also introduced dx, and probability distribution is now shown as a probability density
+%
+%
+% The function assumes that you have files of the form:
+%
+%     rpx1pxpxt_sta_707_1_1x25x20_1_1.dat            
+%     rpx1pxpxt_sta_707_1_1x25x20_1_2.dat            
+%     rpx1pxpxt_sta_707_1_1x25x20_1_3.dat            
+%     rpx1pxpxt_sta_707_1_1x25x20_1_4.dat     
+%
+% Parts of the file name are variable, such as 707, 25 , 20. These are specified by
+% input arguments.
+%
+% folder : location of data. Example: 'C:\MATLABR2007b\work\data\MID_Inferior_Colliculus\';
+%
+% location : Tanya's site identifier. Examples: 707, 708, 709, etc.
+%
+% cellnum : Tanya's global cell identifier. Examples: 1, 2, 3, ...
+%
+% coeffs : coefficient vector which tells the polarity of the filters
+%
+% Npart = 4 : num of test reps in mid code. Should be 4.
+%
+% Nbins = 21 : num bins used to obtain projection values in mid code
+%
+% Nbins_short = 14 : num bins used to get nonlinearity values
+%
+%
+% If you call get_data_sta_fio.m as
+%
+% [fio] = get_dat_sta_fio(folder, location, cellnum, nv, nh, coeff)
+%
+% then Nparts = 4, Nbins = 21, and Nbins_short = 14 by default.
+%
+% fio is a struct that contains the nonlinearity results. fio has the
+% following structure:
+%
+% fio.nbins = Nbins;
+% fio.nbins_short = Nbins_short;
+% fio.px1x2_mtx = px1x2_mtx;                 P(x1,x2)
+% fio.px1x2spk_mtx = px1x2spk_mtx;           P(x1,x2|spk)
+% fio.px1x2spk_pspk_mtx = px1x2spk_pspk_mtx; P(x1,x2|spk) * P(spk)
+% fio.pspk_mtx = pspk_mtx;                   P(spk)
+% fio.pspkx1x2_mtx = pspkx1x2_mtx;           P(spk|x1,x2)
+% fio.x1_mtx = x1_mtx;                       x1
+% fio.px1_mtx = px1_mtx;                     P(x1)
+% fio.pspkx1_mtx = pspkx1_mtx;               P(spk|x1)
+% fio.px1spk_mtx = px1spk_mtx;               P(x1|spk)
+% fio.px1spk_pspk_mtx = px1spk_pspk_mtx;     P(x1|spk) * P(spk)
+% fio.x1_mean = x1_mean; x1
+% fio.pspk_mean = pspk_mean; P(spk)
+% fio.px1_mean = px1_mean; P(x1)
+% fio.px1_std = px1_std; P(x1)
+% fio.px1spk_mean = px1spk_mean; P(x1|spk)
+% fio.px1spk_std = px1spk_std; P(x1|spk)
+% fio.pspkx1_mean = pspkx1_mean; P(spk|x1)
+% fio.pspkx1_std = pspkx1_std; P(spk|x1)
+% fio.info;
+%
+% caa 2/17/09
+%
+% plot_an_1d_from2dior_improved(fname,Nwiny,Nwinx,row,Nwinx,coeff_wnbest1,coeff_wnbest2,Nbins,Nparts,Nbins_short);
+% summary of changes made to accomodate ripple stimuli(May 31 2005):
+% downsampling in ior2_mean is done by summing pxt within a larger bin, summing px within the
+% larger bin, and dividing the two numbers, also introduced dx, and probability distribution is now shown as a probability density
+%
+% Variable name definitions and what they mean:
+% 
+% pspx1 = P(spike|x1)
+% pspk = P(spike)
+% px1spk = P(x1|spike)
+% px1 = P(x1)
+% px1x2 = P(x1,x2)
+% px1x2spk = P(x1,x2|spike)
+% px1spk_pspk = P(x1|sp) * P(spike)
+%
+% px1spk_mean 
+% px1_mean
+% pspkx1_mean
+% pspk_mean
+
+
+
+
+
+x1_mtx = [];
+pspkx1_mtx = [];
+px1_mtx = [];
+px1spk_mtx = [];
+px1spk_pspk_mtx = [];
+
+pspkx1x2_mtx=[];
+pspk_mtx = [];
+px1x2_mtx = [];
+px1x2spk_mtx = [];
+px1x2spk_pspk_mtx = [];
+
+
+
+%Nparts=8;
+%Nbins=21;
+
+minpx = 0; % probability can't be lower than 0
+
+if ( isempty(varargin) )
+    Nparts = 4;
+    Nbins = 21;
+    Nbins_short = 14;
+elseif ( length(varargin)==1 )
+    Nparts = 4;
+    Nbins_short = 14;
+    Nbins = varargin{1};
+elseif ( length(varargin)==2 )
+    Nbins = varargin{1};
+    Nparts = varargin{2};
+    Nbins_short = 14;
+elseif ( length(varargin)==3 )
+    Nbins = varargin{1};
+    Nparts = varargin{2};
+    Nbins_short = varargin{3};
+elseif ( length(varargin)==4 )
+    Nbins = varargin{1};
+    Nparts = varargin{2};
+    Nbins_short = varargin{3};
+    minpx = varargin{4};
+end
+
+Nbins_short;
+Nbins;
+Nparts;
+
+
+if ( length(coeff1) ~= Nparts )
+   length(coeff1)
+   Nparts
+   display('wrong length of coeff vector');
+   return
+end
+
+
+for i = 1:Nparts
+
+   %fname = sprintf('%s_%u.dat',fname_first,i);
+   fp = fopen(files{i},'r');
+
+   if ( fp == -1 )
+      display('error opening file');
+      display(files{i});
+      return
+   end
+
+   x1 = fread(fp, Nbins, 'double'); % first filter projection values
+   x2 = fread(fp, Nbins, 'double'); % second filter projection values
+   px1x2 = fread(fp, Nbins*Nbins, 'double'); % prior distr
+   px1x2spk_pspk = fread(fp, Nbins*Nbins, 'double'); % really rbar * pxt
+   pspk = fread(fp, 1, 'double');
+   px1x2spk = px1x2spk_pspk ./ pspk; % prob of projection given a spike
+   Neff = fread(fp, 1, 'double');
+
+   fclose(fp);
+
+   % Get rid of machine error values
+   ind0 = find(px1x2+eps<minpx);
+   px1x2spk(ind0) = 0;
+
+   % Reshape into a matrix so that marginals can be calculated
+   px1x2 = reshape(px1x2, Nbins, Nbins);  %p(x1,x2)
+   px1x2spk = reshape(px1x2spk, Nbins, Nbins);
+   px1x2spk_pspk = reshape(px1x2spk_pspk, Nbins, Nbins);
+
+
+   if ( coeff1(i) == 1 )
+       px1x2_r = px1x2;
+       px1x2spk_r = px1x2spk;
+       x1_r = x1;
+   else
+       x1_r = -x1;
+   end
+
+   if ( coeff2(i) == -1 )
+       x2_r = -x2;
+   end
+
+   if ( coeff2(i) == 1 )
+      x2_r = x2;
+   end
+
+
+   % assign the complete probability distributions
+   px1x2_mtx = [px1x2_mtx reshape(px1x2,Nbins*Nbins,1)]; % P(x1,x2)
+   px1x2spk_mtx = [px1x2spk_mtx reshape(px1x2spk,Nbins*Nbins,1)]; % P(x1,x2|spike)
+   px1x2spk_pspk_mtx = [px1x2spk_pspk_mtx reshape(px1x2spk_pspk,Nbins*Nbins,1)]; % P(x1,x2|spike) * P(spike)
+   pspk_mtx = [pspk_mtx pspk]; % P(spike)
+   pspkx1x2_mtx = [pspkx1x2_mtx reshape(px1x2spk_pspk ./ (px1x2+eps), Nbins*Nbins, 1)]; % P(spike|x1,x2)
+
+   % assign the x1 marginal probability distributions
+
+   % P(x1|spike) * P(spike)
+   px1spk_pspk = sum(px1x2spk_pspk,2); % sum across columns to get the first marginal
+   px1spk_pspk = px1spk_pspk(:);
+   px1spk_pspk_mtx = [px1spk_pspk_mtx px1spk_pspk];
+
+   % P(x1|spike)
+   px1spk = sum(px1x2spk,2);
+   px1spk = px1spk(:);
+   px1spk_mtx = [px1spk_mtx px1spk]; 
+
+   % P(x1)
+   px1 = sum(px1x2,2);
+   px1 = px1(:);
+   px1_mtx = [px1_mtx px1]; 
+
+% %    ior1 = px1sp_psp ./ (px1+eps);
+% %    ior1 = ior1(:);
+% %    ior1_mtx = [ior1_mtx ior1];
+
+
+   % P(spike|x1)
+   pspkx1 = px1spk_pspk ./ (px1+eps);
+   pspkx1 = pspkx1(:);
+   pspkx1_mtx = [pspkx1_mtx pspkx1]; 
+
+   xm1 = sum(x1_r .* px1); % expected value: x * p(x) of the projection
+   x1_r = x1_r - xm1; % center projections on 0
+   x1_r = x1_r(:);
+   x1_mtx = [x1_mtx x1_r];
+
+end % (for i)
+
+
+if ( isempty(pspx1x2_mtx) )
+    display('empty ior_mtx in plot_an_ior');
+    return;
+end
+
+% if (isempty(ior_mtx) )
+%     display('empty ior_mtx in plot_an_ior');
+%     return;
+% end
+
+xmin = min(min(x1_mtx));
+xmax = max(max(x1_mtx));
+maxmax = max([abs(xmin) xmax]);
+edges = linspace(-maxmax, maxmax, Nbins_short);
+
+% ior1_rescaled = zeros(Nbins_short-1,Nparts);
+pspkx1_rescaled = zeros(Nbins_short-1,Nparts);
+px1_rescaled = zeros(Nbins_short-1,Nparts);
+px1spk_rescaled = zeros(Nbins_short-1,Nparts);
+npoints = zeros(Nbins_short-1,Nparts);
+
+for i = 1:Nbins_short-1
+   for j = 1:Nparts
+      ind = find( (x1_mtx(:,j)>=edges(i)) & (x1_mtx(:,j)<edges(i+1)) );
+      if ( ~isempty(ind) )
+         npoints(i,j)=1; %npoints(i,j)+length(ior1_mtx(ind,j));
+%          ior1_rescaled(i,j)= ior1_rescaled(i,j) + sum(ior1_mtx(ind,j) .* px1_mtx(ind,j));
+         pspkx1_rescaled(i,j)= pspkx1_rescaled(i,j) + sum(pspkx1_mtx(ind,j) .* px1_mtx(ind,j));
+         px1_rescaled(i,j)= px1_rescaled(i,j) + sum(px1_mtx(ind,j));
+         px1spk_rescaled(i,j) = px1spk_rescaled(i,j) + sum(px1spk_mtx(ind,j));
+      end
+   end
+   x1_mean(i) = 0.5*(edges(i)+edges(i+1));%mean(x1_mtx');
+end
+
+nsamples = sum(npoints');
+
+% P(spike|x1)
+% ---------------------------------------------------
+pspkx1_rescaled = pspkx1_rescaled ./ (px1_rescaled+eps);
+pspkx1_mean = sum(pspkx1_rescaled') ./ (nsamples+eps);
+pspkx1_std = sqrt( (sum(pspkx1_rescaled'.^2) ./ (nsamples+eps)-pspx1_mean.^2) ./ (nsamples-1) .* (nsamples+eps) );
+
+% ior1_rescaled = ior1_rescaled./(px1_rescaled+eps);
+% ior1_mean = sum(ior1_rescaled')./(nsamples+eps);
+% ior1_std = sqrt((sum(ior1_rescaled'.^2)./(nsamples+eps)-ior1_mean.^2)./(nsamples-1).*(nsamples+eps));
+
+% P(x1)
+% ---------------------------------------------------
+px1_mean = sum(px1_rescaled') ./ (nsamples+eps);
+px1_std = sqrt( (sum(px1_rescaled'.^2) ./ (nsamples+eps)-px1_mean.^2) ./ (nsamples-1) );
+sumpx1 = sum(px1_mean);
+px1_mean = px1_mean ./ sum(px1_mean);
+
+% dx = (max(x1_mean)-min(x1_mean)) / (Nbins_short-1);
+% px1_mean = px1_mean ./ dx;
+% px1_std = px1_std ./ dx;
+
+
+
+% P(x1|sp)
+% ---------------------------------------------------
+px1spk_mean = sum(px1spk_rescaled') ./ (nsamples+eps);
+px1spk_std = sqrt( (sum(px1spk_rescaled'.^2) ./ (nsamples+eps)-px1_mean.^2) ./ (nsamples-1) );
+sumpx1spk = sum(px1spk_mean);
+px1spk_mean = px1spk_mean ./ sum(px1spk_mean);
+
+pspk_mean = mean(pspk_mtx);
+
+
+
+% % Calculate information using Tanya's early method
+% % ---------------------------------------------------
+% 
+% fio = pspkx1_mean / pspk_mean; % F = P(sp|x1) / P(sp) = P(x1|xp) / P(x1)
+% 
+% index = find(fio>0);
+% information = sum( px1_mean(index) .* fio(index) .* log2(fio(index)) )
+% 
+% index = find(px1spk_mean>0 & px1_mean>0);
+% information = sum( px1spk_mean(index) .* log2( px1spk_mean(index) ./ px1_mean(index) ) )
+% 
+% disp('pause')
+% pause
+
+
+
+
+% Calculate information values using a different technique:
+% ---------------------------------------------------
+pxs1 = px1spk_mtx(:,1);
+pxs2 = px1spk_mtx(:,2);
+pxs3 = px1spk_mtx(:,3);
+pxs4 = px1spk_mtx(:,4);
+
+px1 = px1_mtx(:,1);
+px2 = px1_mtx(:,2);
+px3 = px1_mtx(:,3);
+px4 = px1_mtx(:,4);
+
+ind1 = find(pxs1>0 & px1>0);
+ind2 = find(pxs2>0 & px2>0);
+ind3 = find(pxs3>0 & px3>0);
+ind4 = find(pxs4>0 & px4>0);
+
+info1 = sum( pxs1(ind1) .* log2( pxs1(ind1) ./ px1(ind1) ) );
+info2 = sum( pxs2(ind2) .* log2( pxs2(ind2) ./ px2(ind2) ) );
+info3 = sum( pxs3(ind3) .* log2( pxs3(ind3) ./ px3(ind3) ) );
+info4 = sum( pxs4(ind4) .* log2( pxs4(ind4) ./ px4(ind4) ) );
+
+info = [info1 info2 info3 info4];
+
+
+% Save output data
+% ---------------------------------------------------
+fio.nbins = Nbins;
+fio.nbins_short = Nbins_short;
+fio.px1x2_mtx = px1x2_mtx;
+fio.px1x2spk_mtx = px1x2spk_mtx;
+fio.px1x2spk_pspk_mtx = px1x2spk_pspk_mtx;
+fio.pspk_mtx = pspk_mtx;
+fio.pspkx1x2_mtx = pspkx1x2_mtx;
+fio.x1_mtx = x1_mtx;
+fio.px1_mtx = px1_mtx;
+fio.pspkx1_mtx = pspkx1_mtx;
+fio.px1spk_mtx = px1spk_mtx;
+fio.px1spk_pspk_mtx = px1spk_pspk_mtx;
+fio.x1_mean = x1_mean;
+fio.pspk_mean = pspk_mean;
+fio.px1_mean = px1_mean;
+fio.px1_std = px1_std;
+fio.px1spk_mean = px1spk_mean;
+fio.px1spk_std = px1spk_std;
+fio.pspkx1_mean = pspkx1_mean;
+fio.pspkx1_std = pspkx1_std;
+fio.info;
+
+
+return;
+
+
+

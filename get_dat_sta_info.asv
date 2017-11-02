@@ -1,0 +1,345 @@
+function info = get_information_data(filestruct)
+% get_information_data - get information values for MID analysis
+%
+% info = get_information_data(file)
+%
+% The folder C:\MATLAB65\work\tatyana\Filters contains all the data from
+% Tatyana's maximally informative dimensions analysis. This function goes
+% through that folder, extracts all the files for one location, and then
+% creates a struct array of the file information, where each element of the
+% struct array corresponds to one single unit in the location.
+%
+% location : a scalar. May be 500, 515, 516, 517, 519, 532, 534, 537, 602,
+% 603, 604, 608, 609, 611, 614, or 616.
+%
+%
+% caa 4/11/06
+
+if ( nargin~=1 )
+   error('You need one input arg.');
+end
+
+current_directory = pwd;
+
+if ( isempty(findstr(current_directory, 'C:\MATLAB65\work\tatyana\Filters')) )
+   error('You need to run this function in C:\MATLAB65\work\tatyana\Filters');
+end
+
+
+% Parameters that Tatyana uses in her programs
+nlags = 1;      % multiple images as in vision work
+Nbins = 21; % used for input/output function but not RF
+Nbins_medium = 15; % used for input/output function but not RF
+Nbins_short = 14; % used for input/output function but not RF
+Nparts = 4; % used to identify files, not sure what the significance
+            % is, though
+
+% Number of time and frequency bins in the receptive fields
+Nh = filestruct(1).tbins;
+Nv = filestruct(1).fbins;
+
+
+for i = 1:length(filestruct)
+i
+   info(i).location = filestruct(i).location;
+   info(i).unit = filestruct(i).unit;
+   info(i).tbins = filestruct(i).tbins;
+   info(i).fbins = filestruct(i).fbins;
+
+
+   % The following code plot the spike triggered average
+   %====================================================================
+   [v_sta, coeff_sta, projection_sta, mtx_sta] = get_auditory_strf(filestruct(i).rpsta, Nh, Nv, nlags);
+
+
+
+rpx1pxpxt_sta_707_1_1x25x20_1_1.dat            
+rpx1pxpxt_sta_707_1_1x25x20_1_2.dat            
+rpx1pxpxt_sta_707_1_1x25x20_1_3.dat            
+rpx1pxpxt_sta_707_1_1x25x20_1_4.dat     
+
+
+
+   % Now plot the nonlinearity that goes along with the STA
+   %====================================================================
+   [x_mtx, px_mtx, pxspk_mtx, pspk_mtx, pspkx_mtx, info_sta] = ...
+      get_sta_information(filestruct(i).rpx1pxpxt_sta, coeff_sta, Nbins, Nparts, Nbins_short);
+
+   sta.x = x_mtx;
+   sta.px = px_mtx;
+   sta.pxspk = pxspk_mtx;
+   sta.pspk = pspk_mtx;
+   sta.pspkx = pspkx_mtx;
+   sta.information = info_sta;
+
+   info(i).sta = sta;
+
+end % (for i)
+
+return;
+
+
+
+
+function [x_mtx, px_mtx, pxspk_mtx, pspk_mtx, pspkx_mtx, information] = get_dat_sta_info(files, coeff, varargin)
+% summary of changes made to accomodate ripple stimuli(May 31 2005):
+% downsampling in ior2_mean is done by summing pxt within a larger bin,
+% summing px within the larger bin, and dividing the two numbers, also 
+% introduced dx, and probability distribution is now shown as a probability density
+
+
+x_mtx = [];    
+px_mtx = [];
+pxspk_mtx = [];
+pspkx_mtx = [];
+pspk_mtx = [];
+
+Nbins_short = 14;
+
+if isempty(varargin)
+    Nparts=8;
+    Nbins=21;
+    minpx=0;
+elseif length(varargin)==1
+    Nparts=8;
+    Nbins=varargin{1};
+    minpx=0;
+elseif length(varargin)==2
+    Nbins=varargin{1};
+    Nparts=varargin{2};
+    minpx=0;
+elseif length(varargin)==3
+    Nbins=varargin{1};
+    Nparts=varargin{2};
+    Nbins_short=varargin{3};
+    minpx=0;
+elseif length(varargin)==4
+    Nbins=varargin{1};
+    Nparts=varargin{2};
+    Nbins_short=varargin{3};
+    minpx=varargin{4}
+end
+
+if (length(coeff)~=Nparts) 
+    length(coeff)
+    coeff
+    Nparts
+    display('wrong length of coeff vector');
+    return
+end
+
+for i=1:Nparts
+
+   fp = fopen(files{i},'r');
+
+   if (fp==-1)
+       display('error opening file');
+       display(files{i});
+       pause
+       return
+   end
+
+   x = fread(fp,Nbins,'double');
+   px = fread(fp,Nbins,'double');
+   pxspk_pspk = fread(fp,Nbins,'double');
+   pspk = fread(fp,1,'double');
+   Nrep_eff = fread(fp,1,'double');
+   fclose(fp);
+
+   ind0 = find(px < minpx);
+   pxspk_pspk(ind0)=0;
+   pxspk = pxspk_pspk ./ pspk; % prob of projection given a spike
+
+    xm = sum(x.*px);
+    x = x - xm;
+
+    if (abs(sum(px)-1)>0.001) 
+        display(sprintf('sum of px=%f',sum(px))); 
+        return;
+    end
+
+% sum(px)
+% sum(pxspk)
+% plot(x,px,'r-', x, pxspk, 'k-');
+% pause
+
+    x_r = x;
+ 
+   if (coeff(i)==1)
+      pspkx = pxspk_pspk ./ (px+eps);
+   else 
+      for j=1:Nbins
+         pspkx(Nbins+1-j) = pxspk_pspk(j) ./ (px(j)+eps);
+      end
+      x_r = -x;
+   end
+
+   x_r = reshape(x_r, Nbins,1);
+   px = reshape(px, Nbins,1);
+   pxspk = reshape(pxspk, Nbins,1);
+   pspkx = reshape(pspkx, Nbins,1);
+
+   x_mtx = [x_mtx x_r];
+   px_mtx = [px_mtx px];
+   pxspk_mtx = [pxspk_mtx pxspk];
+   pspk_mtx = [pspk_mtx pspk];
+   pspkx_mtx = [pspkx_mtx pspkx];
+
+end
+
+if ( size(pspkx_mtx,2) ~= Nparts )
+    error('empty pxspk_pspk');
+end
+
+% size(x_mtx)
+% size(px_mtx)
+% size(pxspk_mtx)
+% size(pspkx_mtx)
+% size(pspk_mtx)
+% pause
+
+
+% Calculate information values using a different technique:
+pxs1 = pxspk_mtx(:,1);
+pxs2 = pxspk_mtx(:,2);
+pxs3 = pxspk_mtx(:,3);
+pxs4 = pxspk_mtx(:,4);
+
+px1 = px_mtx(:,1);
+px2 = px_mtx(:,2);
+px3 = px_mtx(:,3);
+px4 = px_mtx(:,4);
+
+ind1 = find(pxs1>0 & px1>0);
+ind2 = find(pxs2>0 & px2>0);
+ind3 = find(pxs3>0 & px3>0);
+ind4 = find(pxs4>0 & px4>0);
+
+info1 = sum( pxs1(ind1) .* log2( pxs1(ind1) ./ px1(ind1) ) );
+info2 = sum( pxs2(ind2) .* log2( pxs2(ind2) ./ px2(ind2) ) );
+info3 = sum( pxs3(ind3) .* log2( pxs3(ind3) ./ px3(ind3) ) );
+info4 = sum( pxs4(ind4) .* log2( pxs4(ind4) ./ px4(ind4) ) );
+
+information = [info1 info2 info3 info4];
+
+
+% pspkx_mtx = reshape(pspkx_mtx,Nbins,Nparts);
+% 
+% xmin = min(min(x_mtx));
+% xmax = max(max(x_mtx));
+% maxmax = max([abs(xmin) xmax]);
+% edges = linspace(-maxmax, maxmax, Nbins_short);
+% 
+% %edges=linspace(x0,x1,Nbins_short);
+% 
+% pspkx_rescaled = zeros(Nbins_short-1,Nparts);
+% px_rescaled = zeros(Nbins_short-1,Nparts);
+% pxspk_rescaled = zeros(Nbins_short-1,Nparts);
+% npoints = zeros(Nbins_short-1,Nparts);
+% 
+% for i=1:Nbins_short-1
+% 
+%     for j=1:Nparts
+% 
+%         ind = find((x_mtx(:,j)>=edges(i))&(x_mtx(:,j)<edges(i+1)));
+% 
+%         if ~isempty(ind)
+%             npoints(i,j) = npoints(i,j)+length(ind);
+%             px_rescaled(i,j) = px_rescaled(i,j) + sum(px_mtx(ind,j));
+%             pxspk_rescaled(i,j) = pxspk_rescaled(i,j) + sum(pxspk_mtx(ind,j));
+%             pspkx_rescaled(i,j) = pspkx_rescaled(i,j) + sum(pspkx_mtx(ind,j).*px_mtx(ind,j));
+%         end
+% 
+%     end
+% 
+%     x_mean(i)=0.5*(edges(i)+edges(i+1));
+% 
+% end
+% 
+% pspkx_rescaled = pspkx_rescaled ./ (px_rescaled+eps);
+% 
+% pspkx_mean = mean(pspkx_rescaled');
+% pspkx_std = sqrt(var(pspkx_rescaled') / Nparts);
+% 
+% px_mean = mean(px_rescaled');
+% px_std = sqrt(var(px_rescaled') / Nparts);    
+% 
+% dx = (max(x_mean)-min(x_mean))/(Nbins_short-1);
+% 
+% px_mean = px_mean ./ dx;
+% px_std = px_std ./ dx;
+% 
+% 
+% % The following code will also calculate the nonlinearity by 
+% % using a loess procedure to find the appropriate shape
+% % to the nonlinearity
+% projection = -10:0.25:10;
+% xmin = min(x_mtx(:))
+% xmax = max(x_mtx(:))
+% 
+% ipos = find(projection < xmax);
+% ineg = find(projection > xmin);
+% 
+% pmax = projection(max(ipos))
+% pmin = projection(min(ineg))
+% pause
+% 
+% 
+% newx = pmin:0.25:pmax;
+% alpha = .1; % minimal smoothing
+% 
+% lambda = 1; % linear local curve fitting
+% newylin = loess(x_mtx(:), pspkx_mtx(:), newx, alpha, lambda);
+% newylin(newylin<0) = 0;
+% 
+% 
+% lambda = 2; % quadratic local curve fitting
+% newyquad = loess(x_mtx(:), pspkx_mtx(:), newx, alpha, lambda);
+% newyquad(newyquad<0) = 0;
+% 
+% % the linear local curve fitting approach is the best
+% 
+% figure;
+% 
+% subplot(2,1,1);
+% hold on;
+% plot(x_mtx(:,1), pspkx_mtx(:,1), 'ko');
+% plot(x_mtx(:,2), pspkx_mtx(:,2), 'ko');
+% plot(x_mtx(:,3), pspkx_mtx(:,3), 'ko');
+% plot(x_mtx(:,4), pspkx_mtx(:,4), 'ko');
+% plot(newx, newylin, 'r-', 'linewidth', 2);
+% plot(newx, newyquad, 'g-', 'linewidth', 2);
+% xlim([-6 6])
+% 
+% subplot(2,1,2);
+% hold on;
+% plot(newx, newylin, 'ro-', 'linewidth', 2);
+% plot(newx, newyquad, 'go-', 'linewidth', 2);
+% plot(x_mean, pspkx_mean, 'ko-');
+% xlim([-6 6])
+% 
+% pause
+
+
+
+
+return;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,274 @@
+function filestruct = get_rat_rippledir_detailed_mid_files(exp, location, x0, nh, nlags)
+% get_rat_rippledir_detailed_mid_files - put Patrick's MID data files into a 
+%    struct array so data can be analysed
+%
+% filestruct = get_rat_rippledir_detailed_mid_files(exp, location, x0, nh, nlags)
+%
+%
+% nh = 25 and nlags = 20, in all cases.
+%
+% caa 4/11/06
+
+filestruct = [];
+
+if ( nargin < 2 )
+   error('You need at least 2 input args.');
+end
+
+if ( nargin == 2 )
+   nh = 25;
+   nlags = 20;
+end
+
+if ( nargin == 3 )
+   nlags = 20;
+end
+
+if ( nargin > 4 )
+   error('You need 2 to 4 input args.');
+end
+
+
+nv = 1;
+
+
+% dfile = dir(['rpsta_' num2str(location) '*.dat']);
+
+% If rpdtest2_v2 exists, then we have run the code for two mids
+dfile = dir(['rpdtest2_v2_' num2str(location) '*.dat']);
+
+% rpdtest2_v2_707_1_1x25x20_1_1.dat
+
+if ( isempty(dfile) )
+   error('That location does not exist.');
+end
+
+unitnum = [];
+for i = 1:length(dfile)
+   file = dfile(i).name;
+   index = findstr('_', file);
+   unitnum = [unitnum str2num(file(index(3)+1:index(4)-1))];
+end
+unitnum = sort(unique(unitnum));
+
+
+temp = dfile(1).name;
+index = findstr(file,'x');
+fbins = str2num( file(index(1)+1:index(2)-1) );
+tbins = str2num( file(index(2)+1:index(2)+2) );
+
+
+% Define a struct to hold the results
+filestruct = struct(...
+'location',        [], ...
+'unit',            [], ...
+'x0',              [], ...
+'nh',              [], ...
+'nv',              [], ...
+'nlags',           [], ...
+'tbins',           [], ...
+'fbins',           [], ...
+'rpsta',           [], ...
+'rpx1pxpxt_sta',   [], ...
+'rpdbest1_v1',     [], ...
+'rpdbest1_v2',     [], ...
+'rpdbest2_v1',     [], ...
+'rpdbest2_v2',     [], ...
+'rpdtest1_v1',     [], ...
+'rpdtest1_v2',     [], ...
+'rpdtest2_v1',     [], ...
+'rpdtest2_v2',     [], ...
+'rpdx1x2px_pxt_1', [], ...
+'rpdx1x2px_pxt_2', []);
+
+
+for i = 1:length(unitnum)
+
+   filestruct(i).location = location;
+   filestruct(i).unit = unitnum(i);
+
+   filestruct(i).x0 = x0;
+
+   filestruct(i).nh = nh;
+   filestruct(i).nv = nv;
+   filestruct(i).nlags = nlags;
+
+   filestruct(i).tbins = tbins;
+   filestruct(i).fbins = fbins;
+
+
+   % The RPSTA Files
+   %=================================================================
+
+   % Get the STA files
+   dfile = dir(['rpsta_' num2str(location) '_' num2str(unitnum(i)) '_*.dat']);
+   if ( ~isempty(dfile) & length(dfile) == 4 )
+      filestruct(i).rpsta{1} = dfile(1).name;
+      filestruct(i).rpsta{2} = dfile(2).name;
+      filestruct(i).rpsta{3} = dfile(3).name;
+      filestruct(i).rpsta{4} = dfile(4).name;
+   end
+
+
+   % Get the STA input/output function files
+   dfile = dir(['rpx1pxpxt_sta_' num2str(location) '_' num2str(unitnum(i)) '_*.dat']);
+   if ( ~isempty(dfile) & length(dfile) == 4 )
+      filestruct(i).rpx1pxpxt_sta{1} = dfile(1).name;
+      filestruct(i).rpx1pxpxt_sta{2} = dfile(2).name;
+      filestruct(i).rpx1pxpxt_sta{3} = dfile(3).name;
+      filestruct(i).rpx1pxpxt_sta{4} = dfile(4).name;
+   end
+
+
+   % The RPDTEST Files
+   %=================================================================
+
+   % Get the MID1 files - First Most Informative Dimension
+   dfile = dir(['rpdtest1_v1_' num2str(location) '_' num2str(unitnum(i)) '_*.dat']);
+   if ( ~isempty(dfile) & length(dfile) == 4 )
+      filestruct(i).rpdtest1_v1{1} = dfile(1).name;
+      filestruct(i).rpdtest1_v1{2} = dfile(2).name;
+      filestruct(i).rpdtest1_v1{3} = dfile(3).name;
+      filestruct(i).rpdtest1_v1{4} = dfile(4).name;
+   end
+
+
+   % Get the MID2 files - First Most Informative Dimension
+   dfile = dir(['rpdtest1_v2_' num2str(location) '_' num2str(unitnum(i)) '_*.dat']);
+   if ( ~isempty(dfile) & length(dfile) == 4 )
+      filestruct(i).rpdtest1_v2{1} = dfile(1).name;
+      filestruct(i).rpdtest1_v2{2} = dfile(2).name;
+      filestruct(i).rpdtest1_v2{3} = dfile(3).name;
+      filestruct(i).rpdtest1_v2{4} = dfile(4).name;
+   end
+
+
+   % Get the MID1 files - First Most Informative Dimension
+   dfile = dir(['rpdtest2_v1_' num2str(location) '_' num2str(unitnum(i)) '_*.dat']);
+   if ( ~isempty(dfile) & length(dfile) == 4 )
+      filestruct(i).rpdtest2_v1{1} = dfile(1).name;
+      filestruct(i).rpdtest2_v1{2} = dfile(2).name;
+      filestruct(i).rpdtest2_v1{3} = dfile(3).name;
+      filestruct(i).rpdtest2_v1{4} = dfile(4).name;
+   end
+
+
+   % Get the MID2 files - First Most Informative Dimension
+   dfile = dir(['rpdtest2_v2_' num2str(location) '_' num2str(unitnum(i)) '_*.dat']);
+   if ( ~isempty(dfile) & length(dfile) == 4 )
+      filestruct(i).rpdtest2_v2{1} = dfile(1).name;
+      filestruct(i).rpdtest2_v2{2} = dfile(2).name;
+      filestruct(i).rpdtest2_v2{3} = dfile(3).name;
+      filestruct(i).rpdtest2_v2{4} = dfile(4).name;
+   end
+
+
+
+   % The RPDBEST Files
+   %=================================================================
+
+   % Get the MID1 files - First Most Informative Dimension
+   dfile = dir(['rpdbest1_v1_' num2str(location) '_' num2str(unitnum(i)) '_*.dat']);
+   if ( ~isempty(dfile) & length(dfile) == 4 )
+      filestruct(i).rpdbest1_v1{1} = dfile(1).name;
+      filestruct(i).rpdbest1_v1{2} = dfile(2).name;
+      filestruct(i).rpdbest1_v1{3} = dfile(3).name;
+      filestruct(i).rpdbest1_v1{4} = dfile(4).name;
+   end
+
+
+   % Get the MID2 files - First Most Informative Dimension
+   dfile = dir(['rpdbest1_v2_' num2str(location) '_' num2str(unitnum(i)) '_*.dat']);
+   if ( ~isempty(dfile) & length(dfile) == 4 )
+      filestruct(i).rpdbest1_v2{1} = dfile(1).name;
+      filestruct(i).rpdbest1_v2{2} = dfile(2).name;
+      filestruct(i).rpdbest1_v2{3} = dfile(3).name;
+      filestruct(i).rpdbest1_v2{4} = dfile(4).name;
+   end
+
+
+   % Get the MID1 files - First Most Informative Dimension
+   dfile = dir(['rpdbest2_v1_' num2str(location) '_' num2str(unitnum(i)) '_*.dat']);
+   if ( ~isempty(dfile) & length(dfile) == 4 )
+      filestruct(i).rpdbest2_v1{1} = dfile(1).name;
+      filestruct(i).rpdbest2_v1{2} = dfile(2).name;
+      filestruct(i).rpdbest2_v1{3} = dfile(3).name;
+      filestruct(i).rpdbest2_v1{4} = dfile(4).name;
+   end
+
+
+   % Get the MID2 files - First Most Informative Dimension
+   dfile = dir(['rpdbest2_v2_' num2str(location) '_' num2str(unitnum(i)) '_*.dat']);
+   if ( ~isempty(dfile) & length(dfile) == 4 )
+      filestruct(i).rpdbest2_v2{1} = dfile(1).name;
+      filestruct(i).rpdbest2_v2{2} = dfile(2).name;
+      filestruct(i).rpdbest2_v2{3} = dfile(3).name;
+      filestruct(i).rpdbest2_v2{4} = dfile(4).name;
+   end
+
+
+   % Get the MID input/output function files - First and Second Most
+   % Informative Dimensions
+   dfile = dir(['rpdx1x2px_pxt_1_' num2str(location) '_' num2str(unitnum(i)) '_*.dat']);
+   if ( ~isempty(dfile) & length(dfile) == 4 )
+      filestruct(i).rpdx1x2px_pxt_1{1} = dfile(1).name;
+      filestruct(i).rpdx1x2px_pxt_1{2} = dfile(2).name;
+      filestruct(i).rpdx1x2px_pxt_1{3} = dfile(3).name;
+      filestruct(i).rpdx1x2px_pxt_1{4} = dfile(4).name;
+   end
+
+
+   dfile = dir(['rpd_x1x2px_pxt_2_' num2str(location) '_' num2str(unitnum(i)) '_*.dat']);
+   if ( ~isempty(dfile) & length(dfile) == 4 )
+      filestruct(i).rpdx1x2px_pxt_2{1} = dfile(1).name;
+      filestruct(i).rpdx1x2px_pxt_2{2} = dfile(2).name;
+      filestruct(i).rpdx1x2px_pxt_2{3} = dfile(3).name;
+      filestruct(i).rpdx1x2px_pxt_2{4} = dfile(4).name;
+   end
+
+end % (for ii)
+
+
+
+
+
+
+% row=3;
+% start_column=1;
+% fname_first=sprintf('rpdtest%u_v1_%u_%u_1x%ux%u_%u',optlevel, location, cell, Nv, Nh, cy)
+% Nparts=4;
+% [v1,coeff1,projection1,mtx1] = plot_a_vector_audSTRF(fname_first,Nh,Nv,nlags,Nwiny,Nwinx,row,start_column,between_column,nlag_start,nlag_end,Nparts);
+% axis tight;
+% ylabel('MID_1');
+% 
+% fname_first=sprintf('rpdtest%u_v2_%u_%u_1x%ux%u_%u',optlevel,location,cell,Nv,Nh,cy);
+% row=4;
+% [v2,coeff2,projection1,mtx2]=plot_a_vector_audSTRF(fname_first,Nh,Nv,nlags,Nwiny,Nwinx,row,start_column,...
+%     between_column,nlag_start,nlag_end,Nparts);
+% axis tight;
+% ylabel('MID_2');
+% 
+% fname=sprintf('rpdx1x2px_pxt_%u_%u_%u_1x%ux%u_%u',optlevel,location,cell,Nv,Nh,cy);
+% start_column=2;
+% row=3;
+% Nbins_medium=15;
+% plot_an_1d_from2dior_improved(fname,Nwiny,Nwinx,row,nlags+1,coeff1,coeff2,Nbins_medium,Nparts,Nbins_short);
+% 
+% row=4;
+% plot_an_1db_from2dior_improved(fname,Nwiny,Nwinx,row,nlags+1,coeff1,coeff2,Nbins_medium,Nparts,Nbins_short);
+% xlabel('projection in units of standard deviation')
+% h=gca;
+% 
+% row=2;
+% [indx,indy]=plot_an_2dior_improvedjust(fname,Nwiny/2,Nwinx,row,nlags+2,coeff1,coeff2,Nparts,Nbins_medium);
+% title('P(spike|2D proj)')
+% 
+% colormap('hot')
+% 
+% set(hfig,'PaperOrientation','landscape');
+% set(hfig,'PaperPosition',[0.25 0.614603 10.5 7.27079])
+
+
+
+
+

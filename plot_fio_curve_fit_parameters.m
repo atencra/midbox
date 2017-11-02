@@ -1,0 +1,180 @@
+function plot_fio_curve_fit_parameters(fioFit)
+%
+% plot_fio_curve_fit_parameters(fioFit) - data and nonlinearity fits
+%
+% plot_fio_curve_fit_parameters(fioFit)
+% ====================================================================
+%
+% fioFit - struct array holding curve fitting parameters for each 
+% nonlinearity. The curve that was fitted was from Hansel and 
+% van Vresswijk (2002).
+%
+% fioFit = get_bandwidth_strf_nonlinearity_hvv_fit(unqbwdb_nonlinearity)
+%
+
+nmse = zeros(size(fioFit));
+r2 = zeros(size(fioFit));
+theta = zeros(size(fioFit));
+sigma = zeros(size(fioFit));
+
+for i = 1:length(fioFit)
+
+   fitParams = fioFit(i).fitParams;
+   theta_temp = fitParams(2);
+   sigma_temp = fitParams(3);
+
+   nmse_temp = fioFit(i).nmse;
+   r2_temp = fioFit(i).r2;
+
+   nmse(i) = nmse_temp;
+   r2(i) = r2_temp;
+   theta(i) = theta_temp;
+   sigma(i) = sigma_temp;
+
+end % (for i)
+
+index = find(nmse < 0.1 & r2 > 0.9);
+theta = theta(index);
+sigma = sigma(index);
+
+
+close all;
+
+figure;
+
+   % Get the histogram, or PDF, of the theta data
+   edges_theta = linspace(-1,8,19);
+   count_theta = histc(theta,edges_theta);
+   pdf_theta = count_theta / sum(count_theta);
+
+   edges_sigma = linspace(0,2.5,21);
+   count_sigma = histc(sigma,edges_sigma);
+   pdf_sigma = count_sigma / sum(count_sigma);
+
+
+   subplot(1,2,1);
+   hold on;
+   hb = bar(edges_theta, pdf_theta, 'histc');
+   set(hb, 'facecolor', [0.6 0.6 0.6]);
+   xlim([-1 8]);
+   ylim([0 1.075*max(pdf_theta)]);
+   xtick = [0:2:8];
+   ytick = [0:0.05:0.2];
+   set(gca,'xtick', xtick, 'xticklabel', xtick);
+   set(gca,'ytick', ytick, 'yticklabel', ytick);
+   set(gca,'tickdir','out', 'ticklength', [0.03 0.03]);
+   xlabel('Theta (SD)');
+   ylabel('Proportion');
+   text(4,0.15,sprintf('Median = %.1f\nMAD = %.1f\nN = %.0f', ...
+      median(theta), mad(theta), length(theta)));
+
+   subplot(1,2,2);
+   hold on;
+   hb = bar(edges_sigma, pdf_sigma, 'histc');
+   set(hb, 'facecolor', [0.6 0.6 0.6]);
+   xlim([0 2.5]);
+   ylim([0 1.05*max(pdf_sigma)]);
+   xtick = [0 0.5 1 1.5 2 2.5];
+   ytick = [0:0.1:0.3];
+   set(gca,'xtick', xtick, 'xticklabel', xtick);
+   set(gca,'ytick', ytick, 'yticklabel', ytick);
+   set(gca,'tickdir','out', 'ticklength', [0.03 0.03]);
+   xlabel('Sigma');
+   text(1.0,0.23,sprintf('Median = %.1f\nMAD = %.1f', median(sigma), mad(sigma)));
+
+   set(gcf,'position', [680   769   560   209]);
+   print_mfilename(mfilename);
+
+
+
+   figure;
+   subplot(3,1,1);
+   hold on;
+   hb = bar(edges_theta, pdf_theta, 'histc');
+   set(hb, 'facecolor', [0.6 0.6 0.6]);
+   xlim([-1 7]);
+   ymax =  1.075*max(pdf_theta);
+   ylim([0 ymax]);
+   xtick = [0:2:8];
+   ytick = [0:0.05:0.2];
+   set(gca,'xtick', xtick, 'xticklabel', xtick);
+   set(gca,'ytick', ytick, 'yticklabel', ytick);
+   set(gca,'tickdir','out', 'ticklength', [0.03 0.03]);
+   xlabel('Theta (SD)');
+   ylabel('Proportion');
+   text(4,0.15,sprintf('Median = %.1f\nMAD = %.1f\nN = %.0f', ...
+      median(theta), mad(theta), length(theta)));
+   subplot_label(gca,'A');
+
+   subplot(3,1,2);
+   hold on;
+   hb = bar(edges_sigma, pdf_sigma, 'histc');
+   set(hb, 'facecolor', [0.6 0.6 0.6]);
+   xlim([0 2.5]);
+   ymax = 1.05*max(pdf_sigma);
+   ylim([0 ymax]);
+   xtick = [0 0.5 1 1.5 2 2.5];
+   ytick = [0:0.1:0.3];
+   set(gca,'xtick', xtick, 'xticklabel', xtick);
+   set(gca,'ytick', ytick, 'yticklabel', ytick);
+   set(gca,'tickdir','out', 'ticklength', [0.03 0.03]);
+   xlabel('Sigma');
+   ylabel('Proportion');
+   text(1.35,0.23,sprintf('Median = %.1f\nMAD = %.1f', median(sigma), mad(sigma)));
+   subplot_label(gca,'B');
+
+
+
+   subplot(3,1,3);
+   hold on;
+   plot(theta, sigma, 'ko', 'markerfacecolor', 'k', 'markersize', 2);
+   
+   xlim([-1 7]);
+   ylim([0 2.5]);
+   xtick = [0:2:8];
+   ytick = [0 0.5 1 1.5 2 2.5];
+   set(gca,'xtick', xtick, 'xticklabel', xtick);
+   set(gca,'ytick', ytick, 'yticklabel', ytick);
+   set(gca,'tickdir','out', 'ticklength', [0.03 0.03]);
+  
+   xlabel('Theta (SD)');
+   ylabel('Sigma');
+
+   [r,p] = corrcoef(theta, sigma);
+   text(5,2,sprintf('r = %.2f\np = %.3f', r(1,2), p(1,2)));
+   subplot_label(gca,'C');
+
+   set(gcf,'position', [680 320  320 660]); 
+
+   print_mfilename(mfilename);
+
+
+
+
+
+
+
+function subplot_label(gca, str)
+
+xlim = get(gca,'xlim');
+ylim = get(gca,'ylim');
+
+xmin = xlim(1);
+ymax = ylim(2);
+
+text(xmin, 1.05*ymax, str);
+
+return;
+
+
+
+
+
+
+
+
+
+
+
+
+

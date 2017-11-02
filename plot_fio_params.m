@@ -1,0 +1,627 @@
+function plot_fio_params(fio_params, mid)
+%
+% Figure 4 can be save using the following command:
+%
+% exportfig(gcf,'sta_v1_v2_asymmetry.eps', 'color', 'gray', 'height', 8, 'width', 6, 'fontmode', 'fixed', 'fontsize', 8);
+
+for i = 1:length(fio_params)
+
+   % STA f(x) params
+
+
+   sta_fx_max(i) = max( fio_params(i).sta.fx );
+   sta_fx_mod(i) = 100 * ( fio_params(i).sta.fx(end-1) - fio_params(i).sta.fx(2) ) / fio_params(i).sta.fx(end-1);
+   sta_dfx_mn(i) = ( fio_params(i).sta.dfx(end) + fio_params(i).sta.dfx(end-1) ) / 2;
+   sta_dfx_end(i) = fio_params(i).sta.dfx(end);
+
+   x = fio_params(i).sta.x;
+   fx = fio_params(i).sta.fx;
+   indexright = find(x>0);
+   indexleft = find(x<0);
+   right = sum( fx(indexright) - min(fx) );
+   left = sum( fx(indexleft) - min(fx) );
+   sta_fx_asi(i) = (right - left) / (right + left);
+
+   sta_ef(i) = fio_params(i).sta.ef;
+   sta_ef2(i) = fio_params(i).sta.ef2;
+   sta_eflogf(i) = fio_params(i).sta.eflogf;
+   sta_efdf(i) = fio_params(i).sta.efdf;
+
+
+   % MID1 f(x) params
+   v1_fx_max(i) = max( fio_params(i).v1.fx );
+   v1_fx_mod(i) = 100 * ( fio_params(i).v1.fx(end-1) - fio_params(i).v1.fx(2) ) / fio_params(i).v1.fx(end-1);
+   v1_dfx_mn(i) = ( fio_params(i).v1.dfx(end) + fio_params(i).v1.dfx(end-1) ) / 2;
+   v1_dfx_end(i) = fio_params(i).v1.dfx(end);
+
+   x = fio_params(i).v1.x;
+   fx = fio_params(i).v1.fx;
+   indexright = find(x>0);
+   indexleft = find(x<0);
+   right = sum( fx(indexright) - min(fx) );
+   left = sum( fx(indexleft) - min(fx) );
+   v1_fx_asi(i) = (right - left) / (right + left);
+
+   v1_ef(i) = fio_params(i).v1.ef;
+   v1_ef2(i) = fio_params(i).v1.ef2;
+   v1_eflogf(i) = fio_params(i).v1.eflogf;
+   v1_efdf(i) = fio_params(i).v1.efdf;
+
+
+   % MID2 f(x) params
+   v2_fx_mod(i) = 100 * ( fio_params(i).v2.fx(end-1) - fio_params(i).v2.fx(2) ) / fio_params(i).v2.fx(end-1);
+   v2_ef(i) = fio_params(i).v2.ef;
+   v2_ef2(i) = fio_params(i).v2.ef2;
+   v2_eflogf(i) = fio_params(i).v2.eflogf;
+   v2_efdf(i) = fio_params(i).v2.efdf;
+
+   x = fio_params(i).v2.x;
+   fx = fio_params(i).v2.fx;
+   indexright = find(x>0);
+   indexleft = find(x<0);
+   right = sum( fx(indexright) - min(fx) );
+   left = sum( fx(indexleft) - min(fx) );
+   v2_fx_asi(i) = (right - left) / (right + left);
+ 
+   r_sta_v1(i) = fio_params(i).r_sta_v1;
+   r_sta_v2(i) = fio_params(i).r_sta_v2;
+   r_v1_v2(i) = fio_params(i).r_v1_v2;
+
+
+   sta = mid(i).rpsta.filter;
+   sta(abs(sta)<0.5) = 0;
+   v1 = mid(i).rpdtest2_v1.filter;
+   v1(abs(v1)<0.5) = 0;
+   [c,p] = corrcoef(sta,v1);
+   si(i) = c(1,2);
+
+   fx1 = mid(i).rpdx1x2px_pxt_2.ior1_mean;
+   fx2 = mid(i).rpdx1x2px_pxt_2.ior2_mean;
+   fx1x2 = mid(i).rpdx1x2px_pxt_2.ior12_mean;
+   [u,s,v] = svd(fx1x2);
+   singvals = sum(s);
+   eigvals = singvals .^ 2;
+   sepindex(i) = 1 - eigvals(1) / (sum(eigvals)+eps);
+
+% clf;
+% subplot(2,1,1);
+% imagesc(fx1x2);
+% subplot(2,1,2);
+% fx1fx2 = fx2(:) * fx1(:)';
+% imagesc(fx1fx2);
+% pause
+
+% clf;
+% subplot(2,1,1);
+% hold on;
+% plot(u(:,1),'r-');
+% plot(u(:,2),'b-');
+% subplot(2,1,2);
+% hold on;
+% plot(v(:,1),'r-');
+% plot(v(:,2),'b-');
+% pause
+
+end % (for)
+
+
+
+figure;
+
+% max( f(x) )
+subplot(4,3,1);
+bins = 0:0.1:1;
+count = histc(sta_fx_max, bins);
+hb = bar(bins, count, 'histc');
+set(hb, 'facecolor', [0.75 0.75 0.75])
+axis([-0.1 1.1 0 1.05*max(count)]);
+set(gca,'xtick', [0:0.2:1], 'xticklabel', [0:0.2:1]);
+set(gca,'tickdir', 'out');
+ylabel('#units, max( P(sp|x) )', 'fontsize', 10);
+title('STA', 'fontsize', 10);
+set(gca,'fontsize', 8);
+
+
+subplot(4,3,2);
+bins = 0:0.1:1;
+count = histc(v1_fx_max, bins);
+hb = bar(bins, count, 'histc');
+set(hb, 'facecolor', [0.75 0.75 0.75])
+axis([-0.1 1.1 0 1.05*max(count)]);
+set(gca,'xtick', [0:0.2:1], 'xticklabel', [0:0.2:1]);
+set(gca,'tickdir', 'out');
+title('MID1', 'fontsize', 10);
+set(gca,'fontsize', 8);
+
+
+% 100 * ( f(N)-f(1) ) / f(N)
+subplot(4,3,4);
+bins = -200:25:200;
+count = histc(sta_fx_mod, bins);
+hb = bar(bins, count, 'histc');
+set(hb, 'facecolor', [0.75 0.75 0.75])
+axis([-210 210 0 1.05*max(count)]);
+set(gca,'xtick', [-200:50:200], 'xticklabel', [-200:50:200]);
+set(gca,'tickdir', 'out');
+ylabel('100*( P(sp|x)(N)-P(sp|x)(1) ) / P(sp|x)(N)', 'fontsize', 10)
+set(gca,'fontsize', 8);
+
+
+subplot(4,3,5);
+bins = -200:25:200;
+count = histc(v1_fx_mod, bins);
+hb = bar(bins, count, 'histc');
+set(hb, 'facecolor', [0.75 0.75 0.75])
+axis([-210 210 0 1.05*max(count)]);
+set(gca,'xtick', [-200:50:200], 'xticklabel', [-200:50:200]);
+set(gca,'tickdir', 'out');
+set(gca,'fontsize', 8);
+
+
+subplot(4,3,6);
+bins = -200:25:200;
+count = histc(v2_fx_mod, bins);
+hb = bar(bins, count, 'histc');
+set(hb, 'facecolor', [0.75 0.75 0.75])
+axis([-210 210 0 1.05*max(count)]);
+set(gca,'xtick', [-200:50:200], 'xticklabel', [-200:50:200]);
+set(gca,'tickdir', 'out');
+set(gca,'fontsize', 8);
+title('MID2', 'fontsize', 10);
+
+
+% df(N)
+subplot(4,3,7);
+bins = -0.4:0.05:0.4;
+count = histc(sta_dfx_end, bins);
+hb = bar(bins, count, 'histc');
+set(hb, 'facecolor', [0.75 0.75 0.75])
+axis([-0.4 0.4 0 1.05*max(count)]);
+set(gca,'xtick', [-0.4:0.1:0.4], 'xticklabel', [-0.4:0.1:0.4]);
+set(gca,'tickdir', 'out');
+ylabel('dP(sp|x)(N)', 'fontsize', 10);
+set(gca,'fontsize', 8);
+
+
+subplot(4,3,8);
+bins = -0.4:0.05:0.4;
+count = histc(v1_dfx_end, bins);
+hb = bar(bins, count, 'histc');
+set(hb, 'facecolor', [0.75 0.75 0.75])
+axis([-0.4 0.4 0 1.05*max(count)]);
+set(gca,'xtick', [-0.4:0.1:0.4], 'xticklabel', [-0.4:0.1:0.4]);
+set(gca,'tickdir', 'out');
+set(gca,'fontsize', 8);
+
+
+% df(N) - df(N-1) ) / 2
+subplot(4,3,10);
+bins = -0.4:0.05:0.4;
+count = histc(sta_dfx_mn, bins);
+hb = bar(bins, count, 'histc');
+set(hb, 'facecolor', [0.75 0.75 0.75])
+axis([-0.4 0.4 0 1.05*max(count)]);
+set(gca,'xtick', [-0.4:0.1:0.4], 'xticklabel', [-0.4:0.1:0.4]);
+set(gca,'tickdir', 'out');
+ylabel('( dP(sp|x)(N) + dP(sp|x)(N-1) ) / 2', 'fontsize', 10);
+set(gca,'fontsize', 8);
+
+
+subplot(4,3,11);
+bins = -0.4:0.05:0.4;
+count = histc(v1_dfx_mn, bins);
+hb = bar(bins, count, 'histc');
+set(hb, 'facecolor', [0.75 0.75 0.75])
+axis([-0.4 0.4 0 1.05*max(count)]);
+set(gca,'xtick', [-0.4:0.1:0.4], 'xticklabel', [-0.4:0.1:0.4]);
+set(gca,'tickdir', 'out');
+set(gca,'fontsize', 8);
+
+print_mfilename(mfilename);
+
+
+
+
+
+figure;
+
+% max( f(x) )
+subplot(2,2,1);
+hold on;
+plot(sta_fx_max, v1_fx_max, 'ko');
+plot([0.003 1.5], [0.003 1.5], 'k-');
+axis([0.003 1.5 0.003 1.5]);
+axis('square');
+set(gca,'xscale', 'log', 'yscale', 'log', 'tickdir', 'out');
+ylabel('MID1');
+title('Max( P(sp|x) )');
+
+% 100 * ( f(N)-f(1) ) / f(N)
+subplot(2,2,2);
+hold on;
+plot(sta_fx_mod, v1_fx_mod, 'ko');
+plot([-150 150], [-150 150], 'k-');
+xtick = -150:50:150;
+set(gca,'xtick', xtick, 'xticklabel', xtick);
+set(gca,'ytick', xtick, 'yticklabel', xtick);
+set(gca,'tickdir', 'out');
+axis([-150 150 -150 150]);
+axis('square');
+title('100*(P(sp|x)(N-1)-P(sp|x)(2)) / P(sp|x)(N-1)');
+
+% max( f(x) )
+subplot(2,2,3);
+hold on;
+plot(sta_dfx_end, v1_dfx_end, 'ko');
+plot([-0.4 0.4], [-0.4 0.4], 'k-');
+xtick = -0.4:0.1:0.4;
+set(gca,'xtick', xtick, 'xticklabel', xtick);
+set(gca,'ytick', xtick, 'yticklabel', xtick);
+set(gca,'tickdir', 'out');
+axis([-0.4 0.4 -0.4 0.4]);
+axis('square');
+xlabel('STA');
+ylabel('MID1');
+title('dP(sp|x)(N)');
+
+% ( df(N) + df(N-1) ) / 2
+subplot(2,2,4);
+hold on;
+plot(sta_dfx_mn, v1_dfx_mn, 'ko');
+plot([-0.4 0.4], [-0.4 0.4], 'k-');
+set(gca,'xtick', xtick, 'xticklabel', xtick);
+set(gca,'ytick', xtick, 'yticklabel', xtick);
+set(gca,'tickdir', 'out');
+axis([-0.4 0.4 -0.4 0.4]);
+axis('square');
+xlabel('STA');
+title('( dP(sp|x)(N) + dP(sp|x)(N-1) ) / 2');
+
+print_mfilename(mfilename);
+
+
+
+figure;
+
+bins = -1:0.1:1;
+xtick = -1:0.2:1;
+
+subplot(3,1,1);
+count = histc(r_sta_v1, bins);
+hb = bar(bins, count, 'histc');
+set(hb, 'facecolor', [0.75 0.75 0.75])
+axis([-1.1 1.1 0 1.05*max(count)]);
+set(gca,'xtick', xtick, 'xticklabel', xtick);
+set(gca,'tickdir', 'out');
+set(gca,'fontsize', 8);
+ylabel('#Units');
+title('Correlation b/w P(sp|x) for STA, V1', 'fontsize', 10);
+
+subplot(3,1,2);
+count = histc(r_sta_v2, bins);
+hb = bar(bins, count, 'histc');
+set(hb, 'facecolor', [0.75 0.75 0.75])
+axis([-1.1 1.1 0 1.05*max(count)]);
+set(gca,'xtick', xtick, 'xticklabel', xtick);
+set(gca,'tickdir', 'out');
+set(gca,'fontsize', 8);
+ylabel('#Units');
+title('Correlation b/w P(sp|x) for STA, V2', 'fontsize', 10);
+
+subplot(3,1,3);
+count = histc(r_v1_v2, bins);
+hb = bar(bins, count, 'histc');
+set(hb, 'facecolor', [0.75 0.75 0.75])
+axis([-1.1 1.1 0 1.05*max(count)]);
+set(gca,'xtick', xtick, 'xticklabel', xtick);
+set(gca,'tickdir', 'out');
+set(gca,'fontsize', 8);
+xlabel('Correlation Coefficient');
+ylabel('#Units');
+title('Correlation b/w P(sp|x) for V1, V2', 'fontsize', 10);
+
+print_mfilename(mfilename);
+
+%close all;
+
+
+figure;
+
+bins = -1:0.1:1;
+xtick = -1:0.2:1;
+
+subplot(4,2,1);
+count = histc(sta_fx_asi, bins);
+hb = bar(bins, count, 'histc');
+set(hb, 'facecolor', [0.75 0.75 0.75])
+axis([-1.1 1.1 0 1.05*max(count)]);
+set(gca,'xtick', xtick, 'xticklabel', xtick);
+set(gca,'tickdir', 'out');
+set(gca,'fontsize', 8);
+ylabel('#Units');
+title('STA P(sp|x) Asymmetry', 'fontsize', 10);
+
+subplot(4,2,3);
+count = histc(v1_fx_asi, bins);
+hb = bar(bins, count, 'histc');
+set(hb, 'facecolor', [0.75 0.75 0.75])
+axis([-1.1 1.1 0 1.05*max(count)]);
+set(gca,'xtick', xtick, 'xticklabel', xtick);
+set(gca,'tickdir', 'out');
+set(gca,'fontsize', 8);
+ylabel('#Units');
+title('V1 P(sp|x) Asymmetry', 'fontsize', 10);
+
+subplot(4,2,5);
+count = histc(v2_fx_asi, bins);
+hb = bar(bins, count, 'histc');
+set(hb, 'facecolor', [0.75 0.75 0.75])
+axis([-1.1 1.1 0 1.05*max(count)]);
+set(gca,'xtick', xtick, 'xticklabel', xtick);
+set(gca,'tickdir', 'out');
+set(gca,'fontsize', 8);
+xlabel('Asymmetry Index');
+ylabel('#Units');
+title('V2 P(sp|x) Asymmetry', 'fontsize', 10);
+
+
+
+subplot(4,2,2);
+count = histc(si, bins);
+hb = bar(bins, count, 'histc');
+set(hb, 'facecolor', [0.75 0.75 0.75])
+axis([-1.1 1.1 0 1.05*max(count)]);
+set(gca,'xtick', xtick, 'xticklabel', xtick);
+set(gca,'tickdir', 'out');
+set(gca,'fontsize', 8);
+ylabel('#Units');
+title('STA/V1 Filter Similarity Index', 'fontsize', 10);
+
+
+
+xtick = -1:0.25:1;
+
+subplot(4,2,4);
+hold on;
+plot(v1_fx_asi, sta_fx_asi, 'ko', 'markersize', 3);
+plot([-1 1], [-1 1], 'k--');
+plot([-1 1], [0 0], 'k-');
+plot([0 0], [-1 1], 'k-');
+set(gca,'xtick', xtick, 'xticklabel', xtick);
+set(gca,'ytick', xtick, 'yticklabel', xtick);
+set(gca,'tickdir', 'out');
+axis([-0.5 1.1 -0.5 1.1]);
+%axis([-1.1 1.1 -1.1 1.1]);
+% axis('square');
+xlabel('V1 P(sp|x) ASI');
+ylabel('STA P(sp|x) ASI');
+
+subplot(4,2,6);
+hold on;
+plot(v1_fx_asi, v2_fx_asi, 'ko', 'markersize', 3);
+plot([-1 1], [-1 1], 'k--');
+plot([-1 1], [0 0], 'k-');
+plot([0 0], [-1 1], 'k-');
+set(gca,'xtick', xtick, 'xticklabel', xtick);
+set(gca,'ytick', xtick, 'yticklabel', xtick);
+set(gca,'tickdir', 'out');
+axis([-0.5 1.1 -1.1 1.1]);
+%axis([-1.1 1.1 -1.1 1.1]);
+% axis('square');
+xlabel('V1 P(sp|x) ASI');
+ylabel('V2 P(sp|x) ASI');
+
+
+bins = 0:0.05:1;
+xtick = 0:0.1:1;
+
+subplot(4,2,7);
+count = histc(sepindex, bins);
+hb = bar(bins, count, 'histc');
+set(hb, 'facecolor', [0.75 0.75 0.75])
+axis([-0.05 1.05 0 1.05*max(count)]);
+set(gca,'xtick', xtick, 'xticklabel', xtick);
+set(gca,'tickdir', 'out');
+set(gca,'fontsize', 8);
+ylabel('#Units');
+title('P(sp|x1,x2) Sep Index', 'fontsize', 10);
+
+print_mfilename(mfilename);
+
+
+
+
+
+% figure;
+% 
+% % ef
+% subplot(4,3,1);
+% hist(sta_ef,11);
+% set(gca,'tickdir', 'out');
+% ylabel('< f(x) >')
+% title('STA');
+% 
+% subplot(4,3,2);
+% hist(v1_ef,11);
+% set(gca,'tickdir', 'out');
+% title('MID1');
+% 
+% subplot(4,3,3);
+% hist(v2_ef,11);
+% set(gca,'tickdir', 'out');
+% title('MID2');
+% 
+% 
+% % ef2
+% subplot(4,3,4);
+% hist(sta_ef2,11);
+% set(gca,'tickdir', 'out');
+% ylabel('< f^2(x) >')
+% 
+% subplot(4,3,5);
+% set(gca,'tickdir', 'out');
+% hist(v1_ef2,11);
+% 
+% subplot(4,3,6);
+% set(gca,'tickdir', 'out');
+% hist(v2_ef2,11);
+% 
+% 
+% % eflogf
+% subplot(4,3,7);
+% hist(sta_eflogf,11);
+% set(gca,'tickdir', 'out');
+% ylabel('< f(x) log f(x) >')
+% 
+% subplot(4,3,8);
+% set(gca,'tickdir', 'out');
+% hist(v1_eflogf,11);
+% 
+% subplot(4,3,9);
+% set(gca,'tickdir', 'out');
+% hist(v2_eflogf,11);
+% 
+% 
+% % efdf
+% subplot(4,3,10);
+% hist(sta_efdf,11);
+% % hist(sta_efdf(~isinf(sta_efdf)&~isinf(sta_efdf)),11);
+% set(gca,'tickdir', 'out');
+% ylabel('< df(x) / f(x) >')
+% 
+% subplot(4,3,11);
+% hist(v1_efdf,11);
+% % hist(v1_efdf(~isinf(v1_efdf)&~isinf(v1_efdf)),11);
+% set(gca,'tickdir', 'out');
+% 
+% subplot(4,3,12);
+% hist(v2_efdf,11);
+% % hist(v2_efdf(~isinf(v2_efdf)&~isinf(v2_efdf)),11);
+% set(gca,'tickdir', 'out');
+% 
+% 
+% 
+% 
+% figure;
+% 
+% % ef
+% subplot(4,3,1);
+% plot(sta_ef, v1_ef, 'ko');
+% set(gca,'tickdir', 'out');
+% xlabel('STA');
+% ylabel('MID1');
+% title('< f(x) >')
+% 
+% 
+% subplot(4,3,2);
+% plot(sta_ef, v2_ef, 'ko');
+% set(gca,'tickdir', 'out');
+% xlabel('STA');
+% ylabel('MID2');
+% title('< f(x) >')
+% 
+% subplot(4,3,3);
+% plot(v1_ef, v2_ef, 'ko');
+% set(gca,'tickdir', 'out');
+% xlabel('MID1');
+% ylabel('MID2');
+% title('< f(x) >')
+% 
+% 
+% % ef2
+% subplot(4,3,4);
+% plot(sta_ef2, v1_ef2, 'ko');
+% set(gca,'tickdir', 'out');
+% xlabel('STA');
+% ylabel('MID1');
+% title('< f^2(x) >')
+% 
+% 
+% subplot(4,3,5);
+% plot(sta_ef2, v2_ef2, 'ko');
+% set(gca,'tickdir', 'out');
+% xlabel('STA');
+% ylabel('MID2');
+% title('< f^2(x) >')
+% 
+% subplot(4,3,6);
+% plot(v1_ef2, v2_ef2, 'ko');
+% set(gca,'tickdir', 'out');
+% xlabel('MID1');
+% ylabel('MID2');
+% title('< f^2(x) >')
+% 
+% 
+% % eflogf
+% subplot(4,3,7);
+% plot(sta_eflogf, v1_eflogf, 'ko');
+% set(gca,'tickdir', 'out');
+% xlabel('STA');
+% ylabel('MID1');
+% title('< f(x) log f(x) >')
+% 
+% 
+% subplot(4,3,8);
+% plot(sta_eflogf, v2_eflogf, 'ko');
+% set(gca,'tickdir', 'out');
+% xlabel('STA');
+% ylabel('MID2');
+% title('< f(x) log f(x) >')
+% 
+% subplot(4,3,9);
+% plot(v1_eflogf, v2_eflogf, 'ko');
+% set(gca,'tickdir', 'out');
+% xlabel('MID1');
+% ylabel('MID2');
+% title('< f(x) log f(x) >')
+% 
+% 
+% % efdf
+% subplot(4,3,10);
+% plot(sta_efdf, v1_efdf, 'ko');
+% set(gca,'tickdir', 'out');
+% xlabel('STA');
+% ylabel('MID1');
+% title('< f(x) log f(x) >')
+% 
+% 
+% subplot(4,3,11);
+% plot(sta_efdf, v2_efdf, 'ko');
+% set(gca,'tickdir', 'out');
+% xlabel('STA');
+% ylabel('MID2');
+% title('< f(x) log f(x) >')
+% 
+% subplot(4,3,12);
+% plot(v1_efdf, v2_efdf, 'ko');
+% set(gca,'tickdir', 'out');
+% xlabel('MID1');
+% ylabel('MID2');
+% title('< f(x) log f(x) >')
+% 
+% 
+% 
+% 
+% 
+% 
+% 
+% figure;
+% subplot(3,1,1);
+% hist(r_sta_v1,11);
+% set(gca,'tickdir', 'out');
+% title('Corr STA, V1');
+% 
+% subplot(3,1,2);
+% hist(r_sta_v2,11);
+% set(gca,'tickdir', 'out');
+% title('Corr STA, V2');
+% 
+% subplot(3,1,3);
+% hist(r_v1_v2,11);
+% set(gca,'tickdir', 'out');
+% title('Corr V1, V2');
+
+
+
+
+

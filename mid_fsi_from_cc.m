@@ -1,0 +1,391 @@
+
+function fsidata = mid_fsi_from_cc(cc)
+
+
+for i = 1:length(cc)
+
+   fsidata(i).exp = cc(i).exp;
+   fsidata(i).site = cc(i).site;
+   fsidata(i).chan = cc(i).chan;
+   fsidata(i).model = cc(i).model;
+   fsidata(i).depth = cc(i).depth;
+   fsidata(i).position = cc(i).position;
+   fsidata(i).stim = cc(i).stim;
+   fsidata(i).atten = cc(i).atten;
+   fsidata(i).spl = cc(i).spl;
+   fsidata(i).sm = cc(i).sm;
+   fsidata(i).tm = cc(i).tm;
+   fsidata(i).mdb = cc(i).mdb;
+
+
+
+   % Get similarity index values for the mean filter
+   x1spk_mean = cc(i).x1spk_mean;
+   x1rand_mean = cc(i).x1rand_mean;
+   x2spk_mean = cc(i).x2spk_mean;
+   x2rand_mean = cc(i).x2rand_mean;
+
+   [fsi_mean_data] = get_fsi_mean_testrep(x1spk_mean, x1rand_mean, x2spk_mean, x2rand_mean);
+
+
+
+   % Get similarity index values for testrep 1 filter
+   x1spk_part1 = cc(i).x1spk_part1;
+   x1rand_part1 = cc(i).x1rand_part1;
+   x2spk_part1 = cc(i).x2spk_part1;
+   x2rand_part1 = cc(i).x2rand_part1;
+
+   [fsi_part1_data] = get_fsi_mean_testrep(x1spk_part1, x1rand_part1, x2spk_part1, x2rand_part1);
+
+
+
+   % Get similarity index values for testrep 2 filter
+   x1spk_part2 = cc(i).x1spk_part2;
+   x1rand_part2 = cc(i).x1rand_part2;
+   x2spk_part2 = cc(i).x2spk_part2;
+   x2rand_part2 = cc(i).x2rand_part2;
+
+   [fsi_part2_data] = get_fsi_mean_testrep(x1spk_part2, x1rand_part2, x2spk_part2, x2rand_part2);
+
+
+
+   % Get similarity index values for testrep 3 filter
+   x1spk_part3 = cc(i).x1spk_part3;
+   x1rand_part3 = cc(i).x1rand_part3;
+   x2spk_part3 = cc(i).x2spk_part3;
+   x2rand_part3 = cc(i).x2rand_part3;
+
+   [fsi_part3_data] = get_fsi_mean_testrep(x1spk_part3, x1rand_part3, x2spk_part3, x2rand_part3);
+
+
+
+   % Get similarity index values for testrep 4 filter
+   x1spk_part4 = cc(i).x1spk_part4;
+   x1rand_part4 = cc(i).x1rand_part4;
+   x2spk_part4 = cc(i).x2spk_part4;
+   x2rand_part4 = cc(i).x2rand_part4;
+
+   [fsi_part4_data] = get_fsi_mean_testrep(x1spk_part4, x1rand_part4, x2spk_part4, x2rand_part4);
+
+
+   fsidata(i).fsi_mean_data = fsi_mean_data;
+   fsidata(i).fsi_part1_data = fsi_part1_data;
+   fsidata(i).fsi_part2_data = fsi_part2_data;
+   fsidata(i).fsi_part3_data = fsi_part3_data;
+   fsidata(i).fsi_part4_data = fsi_part4_data;
+
+
+end % (for i)
+
+return;
+
+
+
+
+% % Next we want p(projection onto mid1 & mid2 | random spikes), so use the original filter but this time
+% % with 50,000 random spikes 
+% [x1x2rand, spindexrand] = get_mid1_mid2_projection(mid1, mid2, sprfile, 0.005, 0.095, spetrand, trigger, fs, spl, mdb);
+% 
+% 
+% % First we want to find the p(proj onto mid1 & mid2 | spike), so use the original spike
+% % train and the original filter
+% [x1x2spk, spindex] = get_mid1_mid2_projection(mid1, mid2, sprfile, 0.005, 0.095, spet, trigger, fs, spl, mdb);
+% 
+% 
+% x1rand = cc(1).x1rand_mean;
+% x2rand = cc(1).x2rand_mean;
+% 
+% x1spk = cc(1).x1spk_mean;
+% x2spk = cc(1).x2spk_mean;
+% 
+% x1rand_abs = abs(x1rand);
+% x2rand_abs = abs(x2rand);
+% x1spk_abs = abs(x1spk);
+% x2spk_abs = abs(x2spk);
+% 
+% 
+% % x1rand_abs = x1rand(x1rand>=0);
+% % x2rand_abs = x2rand(x2rand>=0);
+% % x1spk_abs = x1spk(x1spk>=0);
+% % x2spk_abs = x2spk(x2spk>=0);
+% 
+% 
+% close all;
+% 
+% figure;
+% 
+% subplot(2,3,1);
+% [n1, x1] = hist(x1rand, 50);
+% n1 = n1 ./ sum(n1);
+% hb = bar(x1, n1, 1);
+% set(hb, 'facecolor', 0.6*[1 1 1]);
+% title('P(si1)');
+% 
+% subplot(2,3,2);
+% [n1s, x1s] = hist(x1spk, 50);
+% n1s = n1s ./ sum(n1s);
+% hb = bar(x1s, n1s, 1);
+% set(hb, 'facecolor', 0.6*[1 1 1]);
+% title('P(si1|spk)');
+% 
+% subplot(2,3,3);
+% hold on;
+% plot(x1, n1, 'k-');
+% plot(x1s, n1s, 'r-');
+% 
+% 
+% subplot(2,3,4);
+% [n2, x2] = hist(x2rand, 50);
+% n2 = n2 ./ sum(n2);
+% hb = bar(x2, n2, 1);
+% set(hb, 'facecolor', 0.6*[1 1 1]);
+% title('P(si2)');
+% 
+% subplot(2,3,5);
+% [n2s, x2s] = hist(x2spk, 50);
+% n2s = n2s ./ sum(n2s);
+% hb = bar(x2s, n2s, 1);
+% set(hb, 'facecolor', 0.6*[1 1 1]);
+% title('P(si2|spk)');
+% 
+% subplot(2,3,6);
+% hold on;
+% plot(x2, n2, 'k-');
+% plot(x2s, n2s, 'r-');
+% 
+% set(gcf,'position', [250 160 900 700]);
+% print_mfilename(mfilename);
+% 
+% 
+% 
+% close;
+% 
+% figure;
+% 
+% subplot(2,3,1);
+% [n1, x1] = hist(x1rand_abs, 50);
+% n1 = n1 ./ sum(n1);
+% hb = bar(x1, n1, 1);
+% set(hb, 'facecolor', 0.6*[1 1 1]);
+% title('P(si1)');
+% 
+% subplot(2,3,2);
+% [n1s, x1s] = hist(x1spk_abs, 50);
+% n1s = n1s ./ sum(n1s);
+% hb = bar(x1s, n1s, 1);
+% set(hb, 'facecolor', 0.6*[1 1 1]);
+% title('P(si1|spk)');
+% 
+% subplot(2,3,3);
+% hold on;
+% plot(x1, n1, 'k-');
+% plot(x1s, n1s, 'r-');
+% 
+% 
+% subplot(2,3,4);
+% [n2, x2] = hist(x2rand_abs, 50);
+% n2 = n2 ./ sum(n2);
+% hb = bar(x2, n2, 1);
+% set(hb, 'facecolor', 0.6*[1 1 1]);
+% title('P(si2)');
+% 
+% pause
+% 
+% subplot(2,3,5);
+% [n2s, x2s] = hist(x2spk_abs, 50);
+% n2s = n2s ./ sum(n2s);
+% hb = bar(x2s, n2s, 1);
+% set(hb, 'facecolor', 0.6*[1 1 1]);
+% title('P(si2|spk)');
+% 
+% subplot(2,3,6);
+% hold on;
+% plot(x2, n2, 'k-');
+% plot(x2s, n2s, 'r-');
+% 
+% 
+% set(gcf,'position', [275 160 900 700]);
+% print_mfilename(mfilename);
+% 
+% 
+% [x1, x1spkcdf, x1randcdf, x1ifdcdf] = calc_fsi_cdf(x1spk, x1rand);
+% [x1_abs, x1spk_abs_cdf, x1rand_abs_cdf, x1ifd_abs_cdf] = calc_fsi_cdf(x1spk_abs, x1rand_abs);
+% 
+% [x2, x2spkcdf, x2randcdf, x2ifdcdf] = calc_fsi_cdf(x2spk, x2rand);
+% [x2_abs, x2spk_abs_cdf, x2rand_abs_cdf, x2ifd_abs_cdf] = calc_fsi_cdf(x2spk_abs, x2rand_abs);
+% 
+% 
+% [fsi1_cdf, fsi1_mn, fsi1_md] = fsi(x1spk, x1rand);
+% [fsi1_abs_cdf, fsi1_abs_mn, fsi1_abs_md] = fsi(x1spk_abs, x1rand_abs);
+% 
+% [fsi2_cdf, fsi2_mn, fsi2_md] = fsi(x2spk, x2rand);
+% [fsi2_abs_cdf, fsi2_abs_mn, fsi2_abs_md] = fsi(x2spk_abs, x2rand_abs);
+% 
+% [fsi1_cdf, fsi1_mn, fsi1_md]
+% [fsi1_abs_cdf, fsi1_abs_mn, fsi1_abs_md]
+% [fsi2_cdf, fsi2_mn, fsi2_md]
+% [fsi2_abs_cdf, fsi2_abs_mn, fsi2_abs_md]
+% 
+% figure;
+% 
+% subplot(2,2,1);
+% hold on;
+% plot(x1, x1spkcdf, 'r-');
+% plot(x1, x1randcdf, 'k-');
+% plot(x1, x1ifdcdf, 'b-');
+% 
+% subplot(2,2,2);
+% hold on;
+% plot(x1_abs, x1spk_abs_cdf, 'r-');
+% plot(x1_abs, x1rand_abs_cdf, 'k-');
+% plot(x1_abs, x1ifd_abs_cdf, 'b-');
+% 
+% subplot(2,2,3);
+% hold on;
+% plot(x2, x2spkcdf, 'r-');
+% plot(x2, x2randcdf, 'k-');
+% plot(x2, x2ifdcdf, 'b-');
+% 
+% subplot(2,2,4);
+% hold on;
+% plot(x2_abs, x2spk_abs_cdf, 'r-');
+% plot(x2_abs, x2rand_abs_cdf, 'k-');
+% plot(x2_abs, x2ifd_abs_cdf, 'b-');
+% 
+% set(gcf,'position', [300 160 700 600]);
+% print_mfilename(mfilename);
+% 
+% 
+% return;
+
+
+function [fsidata] = get_fsi_mean_testrep(x1spk, x1rand, x2spk, x2rand)
+
+   % Take abs of similarity index values
+   x1rand_abs = abs( x1rand );
+   x1spk_abs = abs( x1spk );
+   x2rand_abs = abs( x2rand );
+   x2spk_abs = abs( x2spk );
+
+   % Get similarity index values greater than 0
+   x1rand_right = x1rand( x1rand >= 0 );
+   x2rand_right = x2rand( x2rand >= 0 );
+   x1spk_right = x1spk( x1spk >= 0 );
+   x2spk_right = x2spk( x2spk >= 0 );
+
+   % Get similarity index values less than zero
+   x1rand_left = x1rand( x1rand <= 0 );
+   x2rand_left = x2rand( x2rand <= 0 );
+   x1spk_left = x1spk( x1spk <= 0 );
+   x2spk_left = x2spk( x2spk <= 0 );
+
+   % Flip about similarity index == 0 axis
+   x1rand_left = abs( x1rand_left );
+   x2rand_left = abs( x2rand_left );
+   x1spk_left = abs( x1spk_left );
+   x2spk_left = abs( x2spk_left );
+
+   % Calculate FSI values
+   [fsi1_cdf, fsi1_mn, fsi1_md] = fsi(x1spk, x1rand);
+   [fsi2_cdf, fsi2_mn, fsi2_md] = fsi(x2spk, x2rand);
+
+   [fsi1_abs_cdf, fsi1_abs_mn, fsi1_abs_md] = fsi(x1spk_abs, x1rand_abs);
+   [fsi2_abs_cdf, fsi2_abs_mn, fsi2_abs_md] = fsi(x2spk_abs, x2rand_abs);
+
+   [fsi1_right_abs_cdf, fsi1_right_abs_mn, fsi1_right_abs_md] = fsi(x1spk_right, x1rand_right);
+   [fsi2_right_abs_cdf, fsi2_right_abs_mn, fsi2_right_abs_md] = fsi(x2spk_right, x2rand_right);
+
+   [fsi1_left_abs_cdf, fsi1_left_abs_mn, fsi1_left_abs_md] = fsi(x1spk_left, x1rand_left);
+   [fsi2_left_abs_cdf, fsi2_left_abs_mn, fsi2_left_abs_md] = fsi(x2spk_left, x2rand_left);
+
+
+   % Assign results to data structure
+   % -----------------------------------------------------------
+
+   fsidata.fsi1_cdf = fsi1_cdf;
+   fsidata.fsi1_mn = fsi1_mn;
+   fsidata.fsi1_md = fsi1_md;
+
+   fsidata.fsi2_cdf = fsi2_cdf;
+   fsidata.fsi2_mn = fsi2_mn;
+   fsidata.fsi2_md = fsi2_md;
+
+
+   fsidata.fsi1_abs_cdf = fsi1_abs_cdf;
+   fsidata.fsi1_abs_mn = fsi1_abs_mn;
+   fsidata.fsi1_abs_md = fsi1_abs_md;
+
+   fsidata.fsi2_abs_cdf = fsi2_abs_cdf;
+   fsidata.fsi2_abs_mn = fsi2_abs_mn;
+   fsidata.fsi2_abs_md = fsi2_abs_md;
+
+
+   fsidata.fsi1_right_abs_cdf = fsi1_right_abs_cdf;
+   fsidata.fsi1_right_abs_mn = fsi1_right_abs_mn;
+   fsidata.fsi1_right_abs_md = fsi1_right_abs_md;
+
+   fsidata.fsi2_right_abs_cdf = fsi2_right_abs_cdf;
+   fsidata.fsi2_right_abs_mn = fsi2_right_abs_mn;
+   fsidata.fsi2_right_abs_md = fsi2_right_abs_md;
+
+
+   fsidata.fsi1_left_abs_cdf = fsi1_left_abs_cdf;
+   fsidata.fsi1_left_abs_mn = fsi1_left_abs_mn;
+   fsidata.fsi1_left_abs_md = fsi1_left_abs_md;
+
+   fsidata.fsi2_left_abs_cdf = fsi2_left_abs_cdf;
+   fsidata.fsi2_left_abs_mn = fsi2_left_abs_mn;
+   fsidata.fsi2_left_abs_md = fsi2_left_abs_md;
+
+return
+
+
+
+function [X, CDF, CDFr, CDFi] = calc_fsi_cdf(xspk, xrand)
+%CALC_FSI_CDF - Similarity index cumulative distribution function
+%
+% [X, CDF, CDFr, CDFi] = calc_fsi_cdf(xspk, xrand)
+%
+% xspk : vector of similarity index values for spikes
+%
+% xrand : similarity index values for random spikes
+%
+% X : similarity index values for CDF
+%
+% CDF : CDF of similarity index values for spike
+%
+% CDFr : CDF for random spikes
+%
+% CDFi : CDF for ideal feature detector
+%
+% caa 3/4/09
+
+
+
+[N,X] = hist(xspk,-3:.0626:1);
+N = N / sum(N);
+[Nr,Xr] = hist(xrand,-3:.0626:1);
+Nr = Nr / sum(Nr);
+CDF = (intfft(N)-min(intfft(N)))/ (max(intfft(N))-min(intfft(N)));
+CDFr = (intfft(Nr)-min(intfft(Nr)))/ (max(intfft(Nr))-min(intfft(Nr)));
+
+%Generating Cummulative Distribution Function - Ideal Feature Detector 
+CDFi = zeros(1,64);
+CDFi(64) = 1;
+
+
+return;
+
+
+
+
+
+
+
+
+
+
+
+
+
+

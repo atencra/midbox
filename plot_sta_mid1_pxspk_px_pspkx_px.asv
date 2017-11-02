@@ -1,0 +1,350 @@
+function plot_sta_v1_pxsp_px_pspx_px(mid, saveit)
+%plot_sta_v1_pspx_px2 - Plots tuning curve data obtained using the Michigan 16
+%   channel silicon probe.
+%
+%   plot_sta_v1_fx_px(mid)
+%
+%   strf is a struct array holding the receptive field data
+%
+%   trigger is a vector of trigger times associated with the
+%     ripple stimlui
+%
+%   flim is an optional 1x2 vector, holding the frequency range 
+%      over which the strfs are plotted. No input gives plots
+%      over the full frequency range.
+%
+%   tlim is the same as flim, except it over the time axis.
+%
+%   saveit == 1 if you want to save the figure in EPS format in 
+%   the workspace directory. This argument is optional. 
+%   The default is not to save.
+%
+% For illustrations in adobe the following is useful:
+%
+% exportfig(gcf,'sta_v1_pspx_px2.eps', 'color', 'rgb', 'height', 8, 'width', 11, 'fontmode', 'fixed', 'fontsize', 6);
+%
+%   caa 6/28/02
+
+if ( nargin == 1 )
+   saveit = 0;
+end
+
+if ( nargin == 2 )
+   if ( saveit ~= 1 )
+      saveit = 0;
+   end
+end
+
+
+ntot = 1;
+fignum = 1;
+figure;
+
+numplots = ceil(length(mid)/4);
+
+for i = 1:length(mid)
+
+   tbins = mid(i).tbins;
+   fbins = mid(i).fbins;
+
+   pspike = mid(i).rpx1pxpxt_sta.mean_firing;
+
+   sta = mid(i).rpsta.filter;
+   sta = reshape(sta, fbins, tbins);
+   sta(abs(sta)<0.75) = 0;
+   x_sta = mid(i).rpx1pxpxt_sta.x;
+   fx_sta = mid(i).rpx1pxpxt_sta.ior_mean;
+   pspx_sta = fx_sta;
+   px_sta = mid(i).rpx1pxpxt_sta.px_mean;
+   pxsp_sta = fx_sta ./ pspike .* px_sta;
+
+
+   v1 = mid(i).rpdtest2_v1.filter;
+   v1 = reshape(v1, fbins, tbins);
+   v1(abs(v1)<0.75) = 0;
+   x_v1 = mid(i).rpdx1x2px_pxt_2.x1;
+   fx_v1 = mid(i).rpdx1x2px_pxt_2.ior1_mean;
+   pspx_v1 = fx_v1;
+   px_v1 = mid(i).rpdx1x2px_pxt_2.px1_mean;
+   pxsp_v1 = fx_v1 ./ pspike .* px_v1;
+
+   v2 = mid(i).rpdtest2_v2.filter;
+   v2 = reshape(v2, fbins, tbins);
+   v2(abs(v2)<0.75) = 0;
+   x_v2 = mid(i).rpdx1x2px_pxt_2.x2;
+   fx_v2 = mid(i).rpdx1x2px_pxt_2.ior2_mean;
+   pspx_v2 = fx_v2;
+   px_v2 = mid(i).rpdx1x2px_pxt_2.px2_mean;
+   pxsp_v2 = fx_v2 ./ pspike .* px_v2;
+
+   x12 = mid(i).rpdx1x2px_pxt_2.x12;
+   y12 = mid(i).rpdx1x2px_pxt_2.y12;
+   fx_v1v2 = mid(i).rpdx1x2px_pxt_2.ior12_mean;
+
+
+   % Plot STA and its nonlinearity
+   %------------------------------
+   subplot(5,7,(fignum-1)*7+1);
+   minmin = min(min(sta));
+   maxmax = max(max(sta));
+   boundary = max([abs(minmin) abs(maxmax)]);
+   imagesc(sta);
+   axis('xy');
+   %colorbar;
+   %set(gca,'ydir', 'normal');
+   set(gca, 'tickdir', 'out');
+   set(gca, 'clim', [-1.05*boundary-eps 1.05*boundary+eps]);
+   set(gca,'fontsize', 8);
+   ylabel(sprintf('%.0f : %.0f - %.0f', i, mid(i).location, mid(i).unit));
+   if ( fignum == 1 )
+      title('STA', 'fontsize', 10);
+   end;
+
+
+
+   % Plot V1 and its nonlinearity
+   %------------------------------
+   subplot(5,7,(fignum-1)*7+2);
+   minmin = min(min(v1));
+   maxmax = max(max(v1));
+   boundary = max([abs(minmin) abs(maxmax)]);
+   imagesc(v1);
+   axis('xy');
+   %colorbar;
+   %set(gca,'ydir', 'normal');
+   set(gca, 'tickdir', 'out');
+   set(gca, 'clim', [-1.05*boundary-eps 1.05*boundary+eps]);
+   set(gca,'fontsize', 8);
+   if ( fignum == 1 )
+      title('V1', 'fontsize', 10);
+   end;
+
+
+
+   % Plot P(x|sp) and P(x) for the STA
+   %----------------------------------------------
+   subplot(5,7,(fignum-1)*7+3);
+   hold on;
+   plot(x_sta, px_sta, 'ro-', 'markerfacecolor', 'r', 'markersize', 2);
+   plot(x_sta, pxsp_sta, 'ko-', 'markerfacecolor', 'k', 'markersize', 2);
+   if ( fignum == 1 )
+      legend('P(x)', 'P(x|sp)', 0);
+   end
+   xmin = min(x_sta);
+   xmax = max(x_sta);
+   ymin = min([min(pxsp_sta) min(px_sta)]);
+   ymax = max([max(pxsp_sta) max(px_sta)]);
+   xrange = xmax - xmin;
+   yrange = ymax - ymin;
+
+   xlim([xmin-0.1*xrange xmax+0.1*xrange]);
+   ylim([0-0.05*yrange ymax+0.1*yrange]);
+   set(gca,'tickdir', 'out');
+   set(gca,'fontsize', 8);
+   if ( fignum == 1 )
+      title('STA', 'fontsize', 10);
+   end;
+
+
+   % Plot P(x|sp) and P(x) for the STA
+   %----------------------------------------------
+   subplot(5,7,(fignum-1)*7+4);
+   hold on;
+   plot(x_v1, px_v1, 'ro-', 'markerfacecolor', 'r', 'markersize', 2);
+   plot(x_v1, pxsp_v1, 'ko-', 'markerfacecolor', 'k', 'markersize', 2);
+   xmin = min(x_v1);
+   xmax = max(x_v1);
+   ymin = min([min(pxsp_v1) min(px_v1)]);
+   ymax = max([max(pxsp_v1) max(px_v1)]);
+   xrange = xmax - xmin;
+   yrange = ymax - ymin;
+
+   xlim([xmin-0.1*xrange xmax+0.1*xrange]);
+   ylim([0-0.05*yrange ymax+0.1*yrange]);
+   set(gca,'tickdir', 'out');
+   set(gca,'fontsize', 8);
+   if ( fignum == 1 )
+      title('V1', 'fontsize', 10);
+   end;
+
+
+
+
+%    % Plot STA's nonlinearity
+%    %------------------------------
+%    subplot(5,7,(fignum-1)*7+3);
+%    %[ax, h1, h2]=plotyy(x_sta, fx_sta, x_sta, fx_sta ./ pspike);
+%    %set(ax(1), 'xlim', [min(x_sta) max(x_sta)], 'ylim', [0 1.05*max(fx_sta)])
+%    %set(ax(2), 'xlim', [min(x_sta) max(x_sta)], 'ylim', [0 1.05*max(fx_sta./pspike)])
+%    hold on;
+%    plot(x_sta, fx_sta, 'ko-', 'markerfacecolor', 'k', 'markersize', 2);
+%    plot([min(x_sta) max(x_sta)], [pspike pspike], 'k--');
+%    xrange = max(x_sta) - min(x_sta);
+%    yrange = max(fx_sta) - min(fx_sta);
+%    xlim([min(x_sta)-0.1*xrange max(x_sta)+0.1*xrange]);
+%    ylim([0-0.05*yrange max(fx_sta)+0.1*yrange]);
+%    set(gca,'tickdir', 'out');
+%    set(gca,'fontsize', 8);
+%    if ( fignum == 1 )
+%       title('STA P(sp|x)', 'fontsize', 10);
+%    end;
+
+
+
+   % Plot V1's nonlinearity
+   %------------------------------
+%    subplot(5,7,(fignum-1)*7+4);
+%    hold on;
+%    plot(x_v1, fx_v1, 'ko-', 'markerfacecolor', 'k', 'markersize', 2);
+%    plot([min(x_v1) max(x_v1)], [pspike pspike], 'k--');
+%    xrange = max(x_v1) - min(x_v1);
+%    yrange = max(fx_v1) - min(fx_v1);
+%    xlim([min(x_v1)-0.1*xrange max(x_v1)+0.1*xrange]);
+%    ylim([0-0.05*yrange max(fx_v1)+0.1*yrange]);
+%    set(gca,'tickdir', 'out');
+%    set(gca,'fontsize', 8);
+%    if ( fignum == 1 )
+%       title('V1 P(sp|x)', 'fontsize', 10);
+%    end;
+
+
+
+   % Plot F(x) for the STA and V1 on the same axes
+   %----------------------------------------------
+   subplot(5,7,(fignum-1)*7+5);
+   hold on;
+   plot(x_sta, fx_sta, 'ko-', 'markerfacecolor', 'k', 'markersize', 2);
+   plot(x_v1, fx_v1, 'ro-', 'markerfacecolor', 'r', 'markersize', 2);
+
+
+   if ( fignum == 1 )
+      legend('STA', 'V1', 0);
+   end
+
+   xmin = min([min(x_sta) min(x_v1)]);
+   xmax = max([max(x_sta) max(x_v1)]);
+   ymin = min([min(fx_sta) min(fx_v1)]);
+   ymax = max([max(fx_sta) max(fx_v1)]);
+   xrange = max([max(x_sta) max(x_v1)]) - min([min(x_sta) min(x_v1)]);
+   yrange = max([max(fx_sta) max(fx_v1)]) - min([min(fx_sta) min(fx_v1)]);
+   plot([xmin xmax], [pspike pspike], 'k--');
+
+   xlim([xmin-0.1*xrange xmax+0.1*xrange]);
+   ylim([0-0.05*yrange ymax+0.1*yrange]);
+   set(gca,'tickdir', 'out');
+   set(gca,'fontsize', 8);
+   if ( fignum == 1 )
+      title('P(sp|x)', 'fontsize', 10);
+   end;
+
+
+
+%    % Plot F(x) for the STA and V1 on the same axes
+%    %----------------------------------------------
+%    subplot(5,7,(fignum-1)*7+5);
+%    hold on;
+%    plot(x_sta, fx_sta, 'k-', 'linewidth', 2); %'markerfacecolor', 'k', 'markersize', 2);
+%    plot(x_v1, fx_v1, 'r-', 'linewidth', 2); %'markerfacecolor', 'r', 'markersize', 2);
+% 
+%    xmin = min([min(x_sta) min(x_v1)]);
+%    xmax = max([max(x_sta) max(x_v1)]);
+%    ymin = min([min(fx_sta) min(fx_v1)]);
+%    ymax = max([max(fx_sta) max(fx_v1)]);
+%    xrange = max([max(x_sta) max(x_v1)]) - min([min(x_sta) min(x_v1)]);
+%    yrange = max([max(fx_sta) max(fx_v1)]) - min([min(fx_sta) min(fx_v1)]);
+% 
+%    xlim([xmin-0.1*xrange xmax+0.1*xrange]);
+%    ylim([0-0.05*yrange ymax+0.1*yrange]);
+%    set(gca,'tickdir', 'out');
+%    set(gca,'fontsize', 8);
+%    if ( fignum == 1 )
+%       title('P(sp|x)', 'fontsize', 10);
+%    end;
+
+
+
+
+   % Plot P(x|spike), P(x) for the STA
+   %----------------------------------------------
+   subplot(5,7,(fignum-1)*7+6);
+   hold on;
+   plot(x_sta, pspx_sta, 'ro-', 'markerfacecolor', 'r', 'markersize', 2);
+   plot(x_sta, px_sta, 'ko-', 'markerfacecolor', 'k', 'markersize', 2);
+   if ( fignum == 1 )
+      legend('P(sp|x)', 'P(x)', 0);
+   end
+
+   xmin = min(x_sta);
+   xmax = max(x_sta);
+   ymin = min([min(pspx_sta) min(px_sta)]);
+   ymax = max([max(pspx_sta) max(px_sta)]);
+   xrange = xmax - xmin;
+   yrange = ymax - ymin;
+
+   xlim([xmin-0.1*xrange xmax+0.1*xrange]);
+   ylim([0-0.05*yrange ymax+0.1*yrange]);
+   set(gca,'tickdir', 'out');
+   set(gca,'fontsize', 8);
+   if ( fignum == 1 )
+      title('STA', 'fontsize', 10);
+   end;
+
+
+   % Plot P(x|spike), P(x) for the V1
+   %----------------------------------------------
+   subplot(5,7,(fignum-1)*7+7);
+   hold on;
+   plot(x_v1, pspx_v1, 'ro-', 'markerfacecolor', 'r', 'markersize', 2);
+   plot(x_v1, px_v1, 'ko-', 'markerfacecolor', 'k', 'markersize', 2);
+
+   xmin = min(x_v1);
+   xmax = max(x_v1);
+   ymin = min([min(pspx_v1) min(px_v1)]);
+   ymax = max([max(pspx_v1) max(px_v1)]);
+   xrange = xmax - xmin;
+   yrange = ymax - ymin;
+
+   xlim([xmin-0.1*xrange xmax+0.1*xrange]);
+   ylim([0-0.05*yrange ymax+0.1*yrange]);
+   set(gca,'tickdir', 'out');
+   set(gca,'fontsize', 8);
+   if ( fignum == 1 )
+      title('V1', 'fontsize', 10);
+   end;
+
+
+   if ( mod(fignum,5) )
+      fignum = fignum + 1;
+      if ( saveit )
+         if ( i == length(mid) )
+            exportfig(gcf,sprintf('sta_v1_pxsp_px_pspx_px_%.0f.eps',i), 'color', 'rgb', 'height', 8, 'width', 11, 'fontmode', 'fixed', 'fontsize', 6);
+            pause(2);
+         end
+      end
+   else
+      orient landscape;
+      print_mfilename(mfilename);
+      set(gcf,'position',[50 100 700 800]);
+      if ( saveit )
+         exportfig(gcf,sprintf('sta_v1_pxsp_px_pspx_px_%.0f.eps',i), 'color', 'rgb', 'height', 8, 'width', 11, 'fontmode', 'fixed', 'fontsize', 6);
+         pause(2);
+         close;
+      end
+%pause;
+      fignum = 1;
+      if ( i ~= numplots ), figure; end;
+   end
+
+end % (for i)
+
+
+
+
+
+
+
+
+
+
+
+

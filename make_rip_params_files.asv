@@ -1,0 +1,120 @@
+function make_rip_params_files(sprfile, iskfile, exp, site, dimx, ...
+x0, maxcount, maxcount2, testrep)
+%make_rip_params_files  Create .txt files for mid processing
+%
+%     make_rip_params_files(sprfile, iskfile, exp, site, global_cell, ...
+%     dimx, x0, ntrials, maxcount, maxcount2, testrep)
+% 
+%     sprfile : stimulus file, a string, such as
+%     'dmr-500flo-20000fhi-4SM-40TM-40db-44khz-10DF-15min_DFt22_DFf7.spr'
+% 
+%     iskfile : spike train file, a string, such as 
+%     '2003-3-5-site35-2365um-30db-dmr1-fs24038-10.isk'
+% 
+%     exp : experiment date, an integer of the form 20030305
+% 
+%     site : penetration number. A scalar.
+% 
+%     dimx : number of frequencies in the .spr file. This is needed so that
+%     the mid code knows how many frequencies to read in.
+% 
+%     x0 : index into the frequency vector. This is need to extract the 
+%     appropriate part of the stimulus file for processing. See next input 
+%     argument for another constraint.
+% 
+%     maxcount : number of iterations for mid1. Default is 1000. 
+% 
+%     maxcount2 : number of iterations for mid2. Default is 4000. 
+% 
+%     testrep : mid jacknife number. If not input, then a parameter file is
+%     made for 4 testreps.
+% 
+%     Two parameters are obtained from the other input parameters.
+% 
+%     ntrials, the number of time bins in the spike train, is obtained by
+%     loading the data from a stored matrix version of sprfile
+% 
+%     global_cell, the unit number to be analyzed, is obtained from the end 
+%     of iskfile
+% 
+%     Craig Atencio
+%     11/8/11
+
+error(nargchk(6,9,nargin));
+
+if ( nargin == 6 )
+    maxcount = 1000;
+    maxcount2 = 4000;
+    testrep = 1:4;
+elseif ( nargin == 7 )
+    maxcount2 = 4000;
+    testrep = 1:4;
+elseif ( nargin == 8)
+    testrep = 1:4;
+end
+
+iskfile2 = GetFullPath(iskfile);
+sprfile2 = GetFullPath(sprfile);
+
+
+% Get the cell number
+index1 = findstr(iskfile2, '-');
+index2 = findstr(iskfile2(end), '.isk');
+global_cell = str2double( iskfile2(index1+1:index2-1) );
+
+% Get the number of trials
+locator = locator_from_iskfile(iskfile2);
+
+
+
+for i = 1:length(testrep)
+
+    filename = sprintf( 'rip_params_%.0f_%.0f_%.0f_%.0f.txt', ...
+        exp, site, global_cell, testrep(i) );
+
+    fid = fopen(filename, 'w');
+
+    fprintf(fid, '%s\n', sprfile); % stimulus file
+    fprintf(fid, '%s\n', iskfile); % spike train file
+    fprintf(fid, '%.0f\n', exp); % experiment #
+    fprintf(fid, '%.0f\n', site);
+    fprintf(fid, '%.0f\n', global_cell);
+    fprintf(fid, '%.0f\n', dimx); % number of frequencies in stimulus file
+    fprintf(fid, '%.0f\n', x0); % index to frequency vector
+    fprintf(fid, '%.0f\n', ntrials); % number of time bins in spike train
+    fprintf(fid, '%.0f\n', maxcount); % # mid1 iterations
+    fprintf(fid, '%.0f\n', maxcount2); % # mid2 iterations
+    fprintf(fid, '%.0f\n', maxcount2); % # mid2 iterations
+
+
+
+    for j = 1:nTestReps
+
+
+
+
+
+        fprintf(fid, 'classify %s-site%.0f-%.0fum-%.0fdb-%s-fs%.0f-chan%.0f.mich ', ...
+        exp, site, depth, atten, stimuli{j}, fs, channels(i) );
+
+        fprintf(fid, '%s-site%.0f-%.0fum-%.0fdb-%s-fs%.0f-chan%.0f.spk ', ...
+        exp, site, depth, atten, stimuli{j}, fs, channels(i) );
+
+        fprintf(fid, '%s-site%.0f-%.0fum-%.0fdb-%s-fs%.0f-chan%.0f.mdl\n', ...
+        exp, site, depth, atten, stimuli{j}, fs, channels(i) );
+        
+    end % (for j)
+
+    fprintf(fid, 'quit\n');
+
+    fclose(fid);
+
+end % (for i)
+
+
+% recall_state chan10_1
+% classify 2005-1-11-site10-2349um-10db-dmr1-fs18115-chan1.mich 2005-1-11-site10-2349um-10db-dmr1-fs18115-chan1.spk 2005-1-11-site10-2349um-10db-dmr1-fs18115-chan1.mdl
+% classify 2005-1-11-site10-2349um-10db-rn1-fs18115-chan1.mich 2005-1-11-site10-2349um-10db-rn1-fs18115-chan1.spk 2005-1-11-site10-2349um-10db-rn1-fs18115-chan1.mdl
+% classify 2005-1-11-site10-2349um-10db-bn1-fs18115-chan1.mich 2005-1-11-site10-2349um-10db-bn1-fs18115-chan1.spk 2005-1-11-site10-2349um-10db-bn1-fs18115-chan1.mdl
+% classify 2005-1-11-site10-2349um-10db-spka-tc1-fs18115-chan1.mich 2005-1-11-site10-2349um-10db-spka-tc1-fs18115-chan1.spk 2005-1-11-site10-2349um-10db-spka-tc1-fs18115-chan1.mdl
+% classify 2005-1-11-site10-2349um-10db-spkb-tc1-fs18115-chan1.mich 2005-1-11-site10-2349um-10db-spkb-tc1-fs18115-chan1.spk 2005-1-11-site10-2349um-10db-spkb-tc1-fs18115-chan1.mdl

@@ -1,0 +1,46 @@
+function plot_2d_nonlinearity(xbins, pspk, px1x2, px1x2spk, pspkx1x2)
+%plot_2d_nonlinearity - Display combined MID1 and MID2 nonlinearity
+%
+% plot_2d_nonlinearity(xbins, pspk, px1x2, px1x2spk, pspkx1x2)
+% ------------------------------------------------------------
+%
+% xbins : bin centers at which the probability values were calculated
+%
+% pspk : 1x4 cell array. Probability of a spike for each training set.
+%
+% px1x2 : 1x4 cell array. Prior projection probability distribution.
+%
+% px1x2 : 1x4 cell array. Prior projection probability distribution.
+ 
+
+
+% Plot the MID1 and MID2 nonlinearity
+%------------------------------------
+figure;
+%imagesc(x12, y12, fx_v1v2);
+%get(hi)
+%set(hi, 'zscale', 'log')
+h = imagesc(pspkx1x2{1});
+% h = imagesc(x12, y12, log10(fx_v1v2+0.001));
+%    get(h,'xdata')
+%    pause
+%cm = colormap(gray);
+%colormap(gca, flipud(cm));
+% set(gca,'clim', [-3 0]);
+set(gca,'tickdir', 'out');
+xlabel('MID1 Proj','fontsize',8);
+ylabel('MID2 Proj', 'fontsize',8);
+axis('xy');
+%axis('square');
+hc = colorbar;
+set(gca,'fontsize', 8);
+% set(hc,'ytick', [-3 -2 -1 0], 'yticklabel', [0.001 0.01 0.1 1]);
+title('P(spk|x1,x2)', 'fontsize', 8);
+
+
+
+
+
+
+
+
