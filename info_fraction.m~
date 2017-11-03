@@ -1,9 +1,8 @@
 function [infodata] = info_fraction(xbins, x, locator, fraction, x2bins, x2)
 %info_fraction - filter information for different data fractions
 %
-%function [ifrac] = info_fraction_2d(locator, x1, x2, x1binedges, x2binedges, frac)
-% [infodata] = info_fraction(xbins, locator, x, frac)
-% -------------------------------------------------------
+% [infodata] = info_fraction(xbins, x, locator, fraction, x2bins, x2)
+% -------------------------------------------------------------------
 %
 % xbins : center of bins at which projection probability distributions
 % will be calculated
@@ -17,30 +16,16 @@ function [infodata] = info_fraction(xbins, x, locator, fraction, x2bins, x2)
 %
 % infodata : data fraction information estimates. 1x5 vector. 5 estimates 
 % 
+% If 
+%       [infodata] = info_fraction(xbins, x, locator, fraction, x2bins, x2)
+%
+% Then information for 2 filters is estimated, and x2bins is the bin centers
+%       for the 2nd filter projection values, and x2 is similar to x1, but
+%       for the 2nd filter.
 %
 %
-%function [ifraction] = train_test_info_fraction(xbins, x, locator, fraction)
-%train_test_info_fraction - Data fraction information for a filter
-%
-% [ifraction] = train_test_info_fraction(xbins, locator, x, fraction)
-% -------------------------------------------------------------------
-%
-% xbins{i} : cell array of vectors, where each vector contains the 
-% bin centers for probability histograms. Obtained from proj_prob_dist.m
-%
-% locator : Tells if there was a spike at a given trial. Cell array 
-% with 4 elements. Each element is a vector.
-%
-% x : 1x4 cell array. Each element holds the projection values onto
-% a filter.
-%
-% fraction : vector of data fractions. Example: [80 85 90 92.5 95 97.5 100]
-%
-% ifraction : 4xlength(fraction) cell array. Each "row" holds the
-% information estimates for a given data fraction. For each data fraction,
-% five estimates of the information are made.
-%
-% caa 3/13/09
+
+
 
 narginchk(4,6);
 
@@ -107,8 +92,6 @@ rand('state', 0);
 
 if nargin == 4
 
-    fprintf('nargin = %.0f\n', nargin);
-
     for i = 1:length(x)
 
         for j = 1:length(fraction)
@@ -167,8 +150,6 @@ if nargin == 4
     end % (for i)
 
 else
-
-    fprintf('nargin = %.0f\n', nargin);
 
     for i = 1:length(x)
 

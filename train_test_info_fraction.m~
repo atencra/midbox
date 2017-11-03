@@ -21,7 +21,11 @@ function [ifraction] = train_test_info_fraction(xbins, locator, x, fraction)
 %
 % caa 3/13/09
 
-
+if ( ~iscell(xbins) & ~iscell(locator) & ~iscell(x) )
+    xbins = {xbins};
+    locator = {locator};
+    x = {x};
+end
 
 fprintf('\nRunning train_test_info_fraction ...\n');
 
@@ -41,11 +45,15 @@ ifraction = cell( length(x), length(fraction) );
 
 for i = 1:length(x)
 
+   fprintf('Jacknife #%.0f\n', i); 
+
    for j = 1:length(fraction)
 
-      [ifrac] = info_fraction( locator{i}, x{i}, xbins{i}, fraction(j) );
+        fprintf('Fraction = %.2f\n', fraction(j)); 
 
-      ifraction{i}{j} = ifrac;
+        [ifrac] = info_fraction( xbins{i}, x{i}, locator{i}, fraction(j) );
+
+        ifraction{i}{j} = ifrac;
 
    end % (for j)
 

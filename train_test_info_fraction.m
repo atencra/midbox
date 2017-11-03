@@ -45,11 +45,15 @@ ifraction = cell( length(x), length(fraction) );
 
 for i = 1:length(x)
 
+   fprintf('\nJacknife #%.0f\n', i); 
+
    for j = 1:length(fraction)
 
-      [ifrac] = info_fraction( locator{i}, x{i}, xbins{i}, fraction(j) );
+        fprintf('Fraction = %.2f\n', fraction(j)); 
 
-      ifraction{i}{j} = ifrac;
+        [ifrac] = info_fraction( xbins{i}, x{i}, locator{i}, fraction(j) );
+
+        ifraction{i}{j} = ifrac;
 
    end % (for j)
 

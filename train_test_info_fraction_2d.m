@@ -44,8 +44,8 @@ for i = 1:length(x1)
 
    for j = 1:length(fraction)
 
-      [ifrac] = info_fraction_2d( locator{i}, x1{i}, x2{i}, ...
-            x1binedges{i}, x2binedges{i}, fraction(j) );
+      [ifrac] = info_fraction(x1binedges{i}, x1{i}, locator{i}, fraction(j), ... 
+                              x2binedges{i}, x2{i} );
 
       ifraction{i}{j} = ifrac;
 

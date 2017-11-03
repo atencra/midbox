@@ -94,6 +94,7 @@ hold on;
 plot(xbins{1}, pspkx{1}, 'ko-', 'markerfacecolor', 'k');
 plot([min(xbins{1}) max(xbins{1})], [pspk{1} pspk{1}], 'k--');
 xlim(1.1*[min(xbins{1}) max(xbins{1})]);
+xlim([]);
 ylim([0 maxmax]);
 set(gca,'tickdir', 'out', 'ticklength', [0.02 0.02]);
 xlabel('Projection (SD)');

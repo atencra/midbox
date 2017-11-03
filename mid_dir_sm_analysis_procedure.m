@@ -6,6 +6,8 @@ options = struct('batch', 0);
 
 options = input_options(options, varargin);
 
+stimfolder = 'I:\SM_MIDs\Stimuli';
+sprfile = 'dmr-50flo-40000fhi-4SM-150TM-40db-96kHz-96DF-30min_DFt5_DFf8.spr';
 
 if ( options.batch )
 
@@ -28,7 +30,7 @@ if ( options.batch )
 
         mid_dir_plot_filter_fio2d;
 
-        mid_dir_filter_to_fio_info(varargin)
+        mid_dir_filter_to_fio_info('stimfolder', stimfolder, 'batch', 1);
 
         cd(outerfolder);
 
@@ -44,7 +46,7 @@ else
 
     mid_dir_plot_filter_fio2d;
 
-    mid_dir_filter_to_fio_info(varargin)
+    mid_dir_filter_to_fio_info('stimfolder', stimfolder);
 
 end
 
@@ -52,3 +54,30 @@ end
 
 
 return;
+
+
+
+
+void  meanresp(double *sta,double *stimuli, unsigned long Nn,unsigned long fsize,int locator[],unsigned long Nspikes,  unsigned long Ntrials){
+  unsigned long i,k;
+  double temp;
+  for(i=1;i<=Nn;i++)   sta[i]=0;
+  double rbar;
+  rbar=(double)Nspikes/(double)Ntrials;
+  for(k=1;k<=Ntrials;k++){
+    temp= ((double)locator[k]-rbar)/(double)Ntrials;
+    for(i=1;i<=Nn;i++){
+      sta[i]+=stimuli[(k-1)*fsize+i]*temp;
+    }
+  }
+}
+
+
+
+
+
+
+
+
+
+

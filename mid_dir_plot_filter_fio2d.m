@@ -205,8 +205,10 @@ mid12_fio_ior = data.fio_mid12.pspkx1x2_mean;
 mid12_fio_ior_std = data.fio_mid12.pspkx1x2_std;
 
 subplot(4,2,7);
-imagesc(mid12_fio_x2, mid12_fio_x2,  log10(mid12_fio_ior + 0.001));
-set(gca,'clim', [-3 0]);
+pspkx1x2 =  mid12_fio_ior + 0.001;
+mxmx = max(pspkx1x2(:));
+imagesc(mid12_fio_x2, mid12_fio_x2,  log10(pspkx1x2));
+set(gca,'clim', [-3 log10(mxmx)]);
 set(gca,'tickdir', 'out');
 
 xlabel('MID1 Proj');
@@ -214,13 +216,20 @@ ylabel('MID2 Proj');
 
 axis('xy');
 hc = colorbar('EastOutside');
-set(hc,'ytick', [-3 -2 -1 0], 'yticklabel', [0.001 0.01 0.1 1], ...
-'Position', [0.5 0.11 0.02 0.15], 'tickdir', 'out');
+
+%set(hc,'ytick', [-3 -2 -1 0], 'yticklabel', [0.001 0.01 0.1 1], ...
+%       'Position', [0.5 0.11 0.02 0.15], 'tickdir', 'out');
+
+
+set(hc,'ytick', [log10(0.001) log10(mxmx)], ...
+       'yticklabel', [0.001 roundsd(mxmx,3)], ...
+       'Position', [0.5 0.11 0.02 0.15], 'tickdir', 'out');
+
 title('P(spike|x1,x2)');
 
 
 
-suptitle(iskfile);
+suptitle(strrep(iskfile, '_', '-'));
 
 %ss = get(0,'screensize');
 %set(gcf,'position', [ss(3)-1.05*560 ss(4)-1.2*720 560 720]);
