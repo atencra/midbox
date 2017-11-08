@@ -293,7 +293,6 @@ fprintf('MID1 Test Info  : %.4f  %.4f  %.4f  %.4f  %.4f\n\n', infoextrap.test1);
 fprintf('MID2 Test Info  : %.4f  %.4f  %.4f  %.4f  %.4f\n\n', infoextrap.test2);
 fprintf('MID12 Test Info : %.4f  %.4f  %.4f  %.4f  %.4f\n\n', infoextrap.test12);
 fprintf('\n');
-fprintf('\n');
 
 return;
 

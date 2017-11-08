@@ -85,6 +85,7 @@ sta{4} = reshape( data.filter_matrix_sta(:,4), numfbins, numtbins );
 % Save STA data
 %---------------------------------------------------------------
 
+projinfo.fraction = fraction;
 projinfo.ifrac0_train = ifrac0_train;
 projinfo.ifrac0_test = ifrac0_test;
 projinfo.ifrac0_mn_train = ifrac0_mn_train;
