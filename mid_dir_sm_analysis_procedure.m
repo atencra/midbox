@@ -51,7 +51,7 @@ else
 end
 
 
-
+% mid_sm_plot_projinfo(projinfo);
 
 return;
 
