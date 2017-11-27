@@ -239,154 +239,60 @@ mid2{3} = reshape( fio.filter_matrix_test2_v2(:,3), numfbins, numtbins );
 mid2{4} = reshape( fio.filter_matrix_test2_v2(:,4), numfbins, numtbins );
 
 
-
-
 % Plot the filters
 % ----------------------------------------------------------
 
-
 figure;
 
-subplot(3,4,1);
-imagesc( sta{1} );
-minmin = min(min(sta{1}));
-maxmax = max(max(sta{1}));
-boundary = max([abs(minmin) abs(maxmax)]);
-set(gca,'tickdir', 'out', 'ticklength', [0.02 0.02]);
-set(gca, 'clim', [-1.05*boundary-eps 1.05*boundary+eps]);
-cmap = brewmaps('rdbu',21);
-colormap(cmap);
-ylabel('STA');
-title('Train Set 1');
-
-subplot(3,4,2);
-imagesc( sta{2} );
-minmin = min(min(sta{2}));
-maxmax = max(max(sta{2}));
-boundary = max([abs(minmin) abs(maxmax)]);
-set(gca,'tickdir', 'out', 'ticklength', [0.02 0.02]);
-set(gca, 'clim', [-1.05*boundary-eps 1.05*boundary+eps]);
-cmap = brewmaps('rdbu',21);
-colormap(cmap);
-title('Train Set 2');
-
-
-subplot(3,4,3);
-imagesc( sta{3} );
-minmin = min(min(sta{3}));
-maxmax = max(max(sta{3}));
-boundary = max([abs(minmin) abs(maxmax)]);
-set(gca,'tickdir', 'out', 'ticklength', [0.02 0.02]);
-set(gca, 'clim', [-1.05*boundary-eps 1.05*boundary+eps]);
-cmap = brewmaps('rdbu',21);
-colormap(cmap);
-title('Train Set 3');
-
-
-subplot(3,4,4);
-imagesc( sta{4} );
-minmin = min(min(sta{4}));
-maxmax = max(max(sta{4}));
-boundary = max([abs(minmin) abs(maxmax)]);
-set(gca,'tickdir', 'out', 'ticklength', [0.02 0.02]);
-set(gca, 'clim', [-1.05*boundary-eps 1.05*boundary+eps]);
-cmap = brewmaps('rdbu',21);
-colormap(cmap);
-title('Train Set 4');
+for i = 1:4
+    subplot(3,4,i);
+    imagesc( sta{i} );
+    minmin = min(min(sta{i}));
+    maxmax = max(max(sta{i}));
+    boundary = max([abs(minmin) abs(maxmax)]);
+    set(gca,'tickdir', 'out', 'ticklength', [0.02 0.02]);
+    set(gca, 'clim', [-1.05*boundary-eps 1.05*boundary+eps]);
+    cmap = brewmaps('rdbu',21);
+    colormap(cmap);
+    if i == 1
+        ylabel('STA');
+    end
+    title(sprintf('Train Set %.0f',i));
+end % (for i)
 
 
 
-subplot(3,4,5);
-imagesc( mid1{1} );
-minmin = min(min(mid1{1}));
-maxmax = max(max(mid1{1}));
-boundary = max([abs(minmin) abs(maxmax)]);
-set(gca,'tickdir', 'out', 'ticklength', [0.02 0.02]);
-set(gca, 'clim', [-1.05*boundary-eps 1.05*boundary+eps]);
-cmap = brewmaps('rdbu',21);
-colormap(cmap);
-ylabel('MID1');
+
+for i = 1:4
+    subplot(3,4,i+4);
+    imagesc( mid1{i} );
+    minmin = min(min(mid1{i}));
+    maxmax = max(max(mid1{i}));
+    boundary = max([abs(minmin) abs(maxmax)]);
+    set(gca,'tickdir', 'out', 'ticklength', [0.02 0.02]);
+    set(gca, 'clim', [-1.05*boundary-eps 1.05*boundary+eps]);
+    cmap = brewmaps('rdbu',21);
+    colormap(cmap);
+    if i == 1
+        ylabel('MID1');
+    end
+end % (for i)
 
 
-subplot(3,4,6);
-imagesc( mid1{2} );
-minmin = min(min(mid1{2}));
-maxmax = max(max(mid1{2}));
-boundary = max([abs(minmin) abs(maxmax)]);
-set(gca,'tickdir', 'out', 'ticklength', [0.02 0.02]);
-set(gca, 'clim', [-1.05*boundary-eps 1.05*boundary+eps]);
-cmap = brewmaps('rdbu',21);
-colormap(cmap);
-
-
-subplot(3,4,7);
-imagesc( mid1{3} );
-minmin = min(min(mid1{3}));
-maxmax = max(max(mid1{3}));
-boundary = max([abs(minmin) abs(maxmax)]);
-set(gca,'tickdir', 'out', 'ticklength', [0.02 0.02]);
-set(gca, 'clim', [-1.05*boundary-eps 1.05*boundary+eps]);
-cmap = brewmaps('rdbu',21);
-colormap(cmap);
-
-
-subplot(3,4,8);
-imagesc( mid1{4} );
-minmin = min(min(mid1{4}));
-maxmax = max(max(mid1{4}));
-boundary = max([abs(minmin) abs(maxmax)]);
-set(gca,'tickdir', 'out', 'ticklength', [0.02 0.02]);
-set(gca, 'clim', [-1.05*boundary-eps 1.05*boundary+eps]);
-cmap = brewmaps('rdbu',21);
-colormap(cmap);
-title('Train Set 4');
-
-
-
-subplot(3,4,9);
-imagesc( mid2{1} );
-minmin = min(min(mid2{1}));
-maxmax = max(max(mid2{1}));
-boundary = max([abs(minmin) abs(maxmax)]);
-set(gca,'tickdir', 'out', 'ticklength', [0.02 0.02]);
-set(gca, 'clim', [-1.05*boundary-eps 1.05*boundary+eps]);
-cmap = brewmaps('rdbu',21);
-colormap(cmap);
-ylabel('MID2');
-
-
-subplot(3,4,10);
-imagesc( mid2{2} );
-minmin = min(min(mid2{2}));
-maxmax = max(max(mid2{2}));
-boundary = max([abs(minmin) abs(maxmax)]);
-set(gca,'tickdir', 'out', 'ticklength', [0.02 0.02]);
-set(gca, 'clim', [-1.05*boundary-eps 1.05*boundary+eps]);
-cmap = brewmaps('rdbu',21);
-colormap(cmap);
-
-
-subplot(3,4,11);
-imagesc( mid2{3} );
-minmin = min(min(mid2{3}));
-maxmax = max(max(mid2{3}));
-boundary = max([abs(minmin) abs(maxmax)]);
-set(gca,'tickdir', 'out', 'ticklength', [0.02 0.02]);
-set(gca, 'clim', [-1.05*boundary-eps 1.05*boundary+eps]);
-cmap = brewmaps('rdbu',21);
-colormap(cmap);
-
-
-subplot(3,4,12);
-imagesc( mid2{4} );
-minmin = min(min(mid2{4}));
-maxmax = max(max(mid2{4}));
-boundary = max([abs(minmin) abs(maxmax)]);
-set(gca,'tickdir', 'out', 'ticklength', [0.02 0.02]);
-set(gca, 'clim', [-1.05*boundary-eps 1.05*boundary+eps]);
-cmap = brewmaps('rdbu',21);
-colormap(cmap);
-
+for i = 1:4
+    subplot(3,4,i+8);
+    imagesc( mid2{i} );
+    minmin = min(min(mid2{i}));
+    maxmax = max(max(mid2{i}));
+    boundary = max([abs(minmin) abs(maxmax)]);
+    set(gca,'tickdir', 'out', 'ticklength', [0.02 0.02]);
+    set(gca, 'clim', [-1.05*boundary-eps 1.05*boundary+eps]);
+    cmap = brewmaps('rdbu',21);
+    colormap(cmap);
+    if i == 1
+        ylabel('MID2');
+    end
+end % (for i)
 
 return;
 
@@ -406,7 +312,7 @@ ms = 3;
 figure;
 
 
-% Plot the nonlinearities
+% Plot the STA nonlinearities
 % ----------------------------------------------------------
 
 xbins = fio.x0bins;
@@ -415,90 +321,96 @@ pspkx = fio.pspkx0;
         
 maxmax = max([max(pspkx{1}) max(pspkx{2}) max(pspkx{3}) max(pspkx{4}) ]);
 
-subplot(4,4,1);
-hold on;
-plot(xbins{1}, pspkx{1}, 'ko-', 'markerfacecolor', 'k', 'markersize', ms);
-plot([min(xbins{1}) max(xbins{1})], [pspk{1} pspk{1}], 'k--');
-xlim(1.1*[min(xbins{1}) max(xbins{1})]);
-ylim([0 maxmax]);
-set(gca,'tickdir', 'out', 'ticklength', [0.02 0.02]);
-ylabel('STA');
+for i = 1:4
+
+    subplot(4,4,i);
+    hold on;
+    plot(xbins{i}, pspkx{i}, 'ko-', 'markerfacecolor', 'k', 'markersize', ms);
+    plot([min(xbins{i}) max(xbins{i})], [pspk{i} pspk{i}], 'k--');
+    xlim(1.1*[min(xbins{i}) max(xbins{i})]);
+    ylim([0 maxmax]);
+    set(gca,'tickdir', 'out', 'ticklength', [0.02 0.02]);
+
+    if i == 1
+        ylabel('STA');
+    end
+
+end % (for i)
 
 
-subplot(4,4,2);
-hold on;
-plot(xbins{2}, pspkx{2}, 'ko-', 'markerfacecolor', 'k', 'markersize', ms);
-plot([min(xbins{2}) max(xbins{2})], [pspk{2} pspk{2}], 'k--');
-xlim(1.1*[min(xbins{2}) max(xbins{2})]);
-ylim([0 maxmax]);
-set(gca,'tickdir', 'out', 'ticklength', [0.02 0.02]);
-
-
-subplot(4,4,3);
-hold on;
-plot(xbins{3}, pspkx{3}, 'ko-', 'markerfacecolor', 'k', 'markersize', ms);
-plot([min(xbins{3}) max(xbins{3})], [pspk{3} pspk{3}], 'k--');
-xlim(1.1*[min(xbins{3}) max(xbins{3})]);
-ylim([0 maxmax]);
-set(gca,'tickdir', 'out', 'ticklength', [0.02 0.02]);
-
-
-subplot(4,4,4);
-hold on;
-plot(xbins{4}, pspkx{4}, 'ko-', 'markerfacecolor', 'k', 'markersize', ms);
-plot([min(xbins{4}) max(xbins{4})], [pspk{4} pspk{4}], 'k--');
-xlim(1.1*[min(xbins{4}) max(xbins{4})]);
-ylim([0 maxmax]);
-set(gca,'tickdir', 'out', 'ticklength', [0.02 0.02]);
-
-%if (  ~isempty(titlestr) )
-%   suptitle(titlestr);
-%end
+%subplot(4,4,2);
+%hold on;
+%plot(xbins{2}, pspkx{2}, 'ko-', 'markerfacecolor', 'k', 'markersize', ms);
+%plot([min(xbins{2}) max(xbins{2})], [pspk{2} pspk{2}], 'k--');
+%xlim(1.1*[min(xbins{2}) max(xbins{2})]);
+%ylim([0 maxmax]);
+%set(gca,'tickdir', 'out', 'ticklength', [0.02 0.02]);
 %
-%set(gcf, 'position', [293 267 1095 571]);
+%
+%subplot(4,4,3);
+%hold on;
+%plot(xbins{3}, pspkx{3}, 'ko-', 'markerfacecolor', 'k', 'markersize', ms);
+%plot([min(xbins{3}) max(xbins{3})], [pspk{3} pspk{3}], 'k--');
+%xlim(1.1*[min(xbins{3}) max(xbins{3})]);
+%ylim([0 maxmax]);
+%set(gca,'tickdir', 'out', 'ticklength', [0.02 0.02]);
+%
+%
+%subplot(4,4,4);
+%hold on;
+%plot(xbins{4}, pspkx{4}, 'ko-', 'markerfacecolor', 'k', 'markersize', ms);
+%plot([min(xbins{4}) max(xbins{4})], [pspk{4} pspk{4}], 'k--');
+%xlim(1.1*[min(xbins{4}) max(xbins{4})]);
+%ylim([0 maxmax]);
+%set(gca,'tickdir', 'out', 'ticklength', [0.02 0.02]);
 
 
 
-% Plot the nonlinearities
+
+% Plot the MID1 nonlinearities
 % ----------------------------------------------------------
 
 xbins = fio.x1bins;
-pspkx2 = fio.pspkx1;
+pspkx = fio.pspkx1;
         
 maxmax = max([max(pspkx{1}) max(pspkx{2}) max(pspkx{3}) max(pspkx{4}) ]);
 
-subplot(4,4,5);
-hold on;
-plot(xbins{1}, pspkx{1}, 'ko-', 'markerfacecolor', 'k', 'markersize', ms);
-plot([min(xbins{1}) max(xbins{1})], [pspk{1} pspk{1}], 'k--');
-xlim(1.1*[min(xbins{1}) max(xbins{1})]);
-ylim([0 maxmax]);
-set(gca,'tickdir', 'out', 'ticklength', [0.02 0.02]);
-ylabel('MID1');
+for i = 1:4
+    subplot(4,4,i+4);
+    hold on;
+    plot(xbins{i}, pspkx{i}, 'ko-', 'markerfacecolor', 'k', 'markersize', ms);
+    plot([min(xbins{i}) max(xbins{i})], [pspk{1} pspk{1}], 'k--');
+    xlim(1.1*[min(xbins{i}) max(xbins{i})]);
+    ylim([0 maxmax]);
+    set(gca,'tickdir', 'out', 'ticklength', [0.02 0.02]);
+    if i == 1
+        ylabel('MID1');
+    end
+end % (for i)
 
-subplot(4,4,6);
-hold on;
-plot(xbins{2}, pspkx{2}, 'ko-', 'markerfacecolor', 'k', 'markersize', ms);
-plot([min(xbins{2}) max(xbins{2})], [pspk{2} pspk{2}], 'k--');
-xlim(1.1*[min(xbins{2}) max(xbins{2})]);
-ylim([0 maxmax]);
-set(gca,'tickdir', 'out', 'ticklength', [0.02 0.02]);
-
-subplot(4,4,7);
-hold on;
-plot(xbins{3}, pspkx{3}, 'ko-', 'markerfacecolor', 'k', 'markersize', ms);
-plot([min(xbins{3}) max(xbins{3})], [pspk{3} pspk{3}], 'k--');
-xlim(1.1*[min(xbins{3}) max(xbins{3})]);
-ylim([0 maxmax]);
-set(gca,'tickdir', 'out', 'ticklength', [0.02 0.02]);
-
-subplot(4,4,8);
-hold on;
-plot(xbins{4}, pspkx{4}, 'ko-', 'markerfacecolor', 'k', 'markersize', ms);
-plot([min(xbins{4}) max(xbins{4})], [pspk{4} pspk{4}], 'k--');
-xlim(1.1*[min(xbins{4}) max(xbins{4})]);
-ylim([0 maxmax]);
-set(gca,'tickdir', 'out', 'ticklength', [0.02 0.02]);
+%subplot(4,4,6);
+%hold on;
+%plot(xbins{2}, pspkx{2}, 'ko-', 'markerfacecolor', 'k', 'markersize', ms);
+%plot([min(xbins{2}) max(xbins{2})], [pspk{2} pspk{2}], 'k--');
+%xlim(1.1*[min(xbins{2}) max(xbins{2})]);
+%ylim([0 maxmax]);
+%set(gca,'tickdir', 'out', 'ticklength', [0.02 0.02]);
+%
+%subplot(4,4,7);
+%hold on;
+%plot(xbins{3}, pspkx{3}, 'ko-', 'markerfacecolor', 'k', 'markersize', ms);
+%plot([min(xbins{3}) max(xbins{3})], [pspk{3} pspk{3}], 'k--');
+%xlim(1.1*[min(xbins{3}) max(xbins{3})]);
+%ylim([0 maxmax]);
+%set(gca,'tickdir', 'out', 'ticklength', [0.02 0.02]);
+%
+%subplot(4,4,8);
+%hold on;
+%plot(xbins{4}, pspkx{4}, 'ko-', 'markerfacecolor', 'k', 'markersize', ms);
+%plot([min(xbins{4}) max(xbins{4})], [pspk{4} pspk{4}], 'k--');
+%xlim(1.1*[min(xbins{4}) max(xbins{4})]);
+%ylim([0 maxmax]);
+%set(gca,'tickdir', 'out', 'ticklength', [0.02 0.02]);
 
 %if (  ~isempty(titlestr) )
 %   suptitle(titlestr);
@@ -516,51 +428,43 @@ xbins = fio.x2bins;
 pspkx = fio.pspkx2;
         
 maxmax = max([max(pspkx{1}) max(pspkx{2}) max(pspkx{3}) max(pspkx{4}) ]);
+for i = 1:4
+    subplot(4,4,i+8);
+    hold on;
+    plot(xbins{i}, pspkx{i}, 'ko-', 'markerfacecolor', 'k', 'markersize', ms);
+    plot([min(xbins{i}) max(xbins{i})], [pspk{1} pspk{1}], 'k--');
+    xlim(1.1*[min(xbins{i}) max(xbins{i})]);
+    ylim([0 maxmax]);
+    set(gca,'tickdir', 'out', 'ticklength', [0.02 0.02]);
+    if i == 1
+        ylabel('MID2');
+    end
+end % (for i)
 
-subplot(4,4,9);
-hold on;
-plot(xbins{1}, pspkx{1}, 'ko-', 'markerfacecolor', 'k', 'markersize', ms);
-plot([min(xbins{1}) max(xbins{1})], [pspk{1} pspk{1}], 'k--');
-xlim(1.1*[min(xbins{1}) max(xbins{1})]);
-ylim([0 maxmax]);
-set(gca,'tickdir', 'out', 'ticklength', [0.02 0.02]);
-ylabel('MID2');
 
-subplot(4,4,10);
-hold on;
-plot(xbins{2}, pspkx{2}, 'ko-', 'markerfacecolor', 'k', 'markersize', ms);
-plot([min(xbins{2}) max(xbins{2})], [pspk{2} pspk{2}], 'k--');
-xlim(1.1*[min(xbins{2}) max(xbins{2})]);
-ylim([0 maxmax]);
-set(gca,'tickdir', 'out', 'ticklength', [0.02 0.02]);
-
-subplot(4,4,11);
-hold on;
-plot(xbins{3}, pspkx{3}, 'ko-', 'markerfacecolor', 'k', 'markersize', ms);
-plot([min(xbins{3}) max(xbins{3})], [pspk{3} pspk{3}], 'k--');
-xlim(1.1*[min(xbins{3}) max(xbins{3})]);
-ylim([0 maxmax]);
-set(gca,'tickdir', 'out', 'ticklength', [0.02 0.02]);
-
-subplot(4,4,12);
-hold on;
-plot(xbins{4}, pspkx{4}, 'ko-', 'markerfacecolor', 'k', 'markersize', ms);
-plot([min(xbins{4}) max(xbins{4})], [pspk{4} pspk{4}], 'k--');
-xlim(1.1*[min(xbins{4}) max(xbins{4})]);
-ylim([0 maxmax]);
-set(gca,'tickdir', 'out', 'ticklength', [0.02 0.02]);
-
-%if (  ~isempty(titlestr) )
-%   suptitle(titlestr);
-%end
+%subplot(4,4,10);
+%hold on;
+%plot(xbins{2}, pspkx{2}, 'ko-', 'markerfacecolor', 'k', 'markersize', ms);
+%plot([min(xbins{2}) max(xbins{2})], [pspk{2} pspk{2}], 'k--');
+%xlim(1.1*[min(xbins{2}) max(xbins{2})]);
+%ylim([0 maxmax]);
+%set(gca,'tickdir', 'out', 'ticklength', [0.02 0.02]);
 %
-%set(gcf, 'position', [293 267 1095 571]);
-
-
-
-
-
-
+%subplot(4,4,11);
+%hold on;
+%plot(xbins{3}, pspkx{3}, 'ko-', 'markerfacecolor', 'k', 'markersize', ms);
+%plot([min(xbins{3}) max(xbins{3})], [pspk{3} pspk{3}], 'k--');
+%xlim(1.1*[min(xbins{3}) max(xbins{3})]);
+%ylim([0 maxmax]);
+%set(gca,'tickdir', 'out', 'ticklength', [0.02 0.02]);
+%
+%subplot(4,4,12);
+%hold on;
+%plot(xbins{4}, pspkx{4}, 'ko-', 'markerfacecolor', 'k', 'markersize', ms);
+%plot([min(xbins{4}) max(xbins{4})], [pspk{4} pspk{4}], 'k--');
+%xlim(1.1*[min(xbins{4}) max(xbins{4})]);
+%ylim([0 maxmax]);
+%set(gca,'tickdir', 'out', 'ticklength', [0.02 0.02]);
 
 
 
@@ -572,42 +476,46 @@ x1binedges = fio.x1binedges;
 x2binedges = fio.x2binedges;
 pspkx1x2 = fio.pspkx1x2;
 
-subplot(4,4,13);
-mxmx = max(pspkx1x2{1}(:));
-imagesc(edge2center(x1binedges{1}), edge2center(x2binedges{1}),  log10(pspkx1x2{1}));
-set(gca,'clim', [-3 log10(mxmx)]);
-set(gca,'tickdir', 'out');
-axis('xy');
-xlabel('MID1 Proj');
-ylabel('MID2 Proj');
+for i = 1:4
+    subplot(4,4,i+12);
+    mxmx = max(pspkx1x2{i}(:));
+    imagesc(edge2center(x1binedges{i}), edge2center(x2binedges{i}),  log10(pspkx1x2{i}));
+    set(gca,'clim', [-3 log10(mxmx)]);
+    set(gca,'tickdir', 'out');
+    axis('xy');
+    xlabel('MID1 Proj');
+    if i == 1
+        ylabel('MID2 Proj');
+    end
+end % (for i)
 
 
-subplot(4,4,14);
-mxmx = max(pspkx1x2{2}(:));
-imagesc(edge2center(x1binedges{2}), edge2center(x2binedges{2}),  log10(pspkx1x2{2}));
-set(gca,'clim', [-3 log10(mxmx)]);
-set(gca,'tickdir', 'out');
-axis('xy');
-xlabel('MID1 Proj');
-
-
-subplot(4,4,15);
-mxmx = max(pspkx1x2{3}(:));
-imagesc(edge2center(x1binedges{3}), edge2center(x2binedges{3}),  log10(pspkx1x2{3}));
-set(gca,'clim', [-3 log10(mxmx)]);
-set(gca,'tickdir', 'out');
-axis('xy');
-xlabel('MID1 Proj');
-
-
-
-subplot(4,4,16);
-mxmx = max(pspkx1x2{4}(:));
-imagesc(edge2center(x1binedges{4}), edge2center(x2binedges{4}),  log10(pspkx1x2{3}));
-set(gca,'clim', [-3 log10(mxmx)]);
-set(gca,'tickdir', 'out');
-axis('xy');
-xlabel('MID1 Proj');
+%subplot(4,4,14);
+%mxmx = max(pspkx1x2{2}(:));
+%imagesc(edge2center(x1binedges{2}), edge2center(x2binedges{2}),  log10(pspkx1x2{2}));
+%set(gca,'clim', [-3 log10(mxmx)]);
+%set(gca,'tickdir', 'out');
+%axis('xy');
+%xlabel('MID1 Proj');
+%
+%
+%subplot(4,4,15);
+%mxmx = max(pspkx1x2{3}(:));
+%imagesc(edge2center(x1binedges{3}), edge2center(x2binedges{3}),  log10(pspkx1x2{3}));
+%set(gca,'clim', [-3 log10(mxmx)]);
+%set(gca,'tickdir', 'out');
+%axis('xy');
+%xlabel('MID1 Proj');
+%
+%
+%
+%subplot(4,4,16);
+%mxmx = max(pspkx1x2{4}(:));
+%imagesc(edge2center(x1binedges{4}), edge2center(x2binedges{4}),  log10(pspkx1x2{3}));
+%set(gca,'clim', [-3 log10(mxmx)]);
+%set(gca,'tickdir', 'out');
+%axis('xy');
+%xlabel('MID1 Proj');
 
 
 
@@ -619,7 +527,6 @@ xlabel('MID1 Proj');
 %       'Position', [0.5 0.11 0.02 0.15], 'tickdir', 'out');
 %
 %
-
 
 suptitle(strrep(iskfile, '_', '-'));
 
@@ -828,7 +735,8 @@ ytest = polyval(ptest, xfit);
 
 subplot(2,5,5);
 hold on;
-errorbar( 1./fraction, ifrac_train_mn, ifrac_train_std/2, 'ko', 'markerfacecolor', 'k');
+%errorbar( 1./fraction, ifrac_train_mn, ifrac_train_std/2, 'ko', 'markerfacecolor', 'k');
+plot( 1./fraction, ifrac_train_mn, 'ko', 'markerfacecolor', 'k');
 plot(xfit, ytrain, 'k-');
 xlim(xlim_vec);
 ylim( [0 1.1*max(ifrac_train_mn)+ max(ifrac_train_std)] );
@@ -840,7 +748,8 @@ set(gca,'xticklabel', xticklabel);
 
 subplot(2,5,10);
 hold on;
-errorbar( 1./fraction, ifrac_test_mn, ifrac_test_std/2, 'ko', 'markerfacecolor', 'k');
+%errorbar( 1./fraction, ifrac_test_mn, ifrac_test_std/2, 'ko', 'markerfacecolor', 'k');
+plot( 1./fraction, ifrac_test_mn, 'ko', 'markerfacecolor', 'k');
 plot(xfit, ytest, 'k-');
 xlim(xlim_vec);
 ylim( [0 1.1*max(ifrac_test_mn)+ max(ifrac_test_std)] );
