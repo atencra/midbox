@@ -21,6 +21,9 @@ sta_fio_ior = data.fio_sta.ior_mean;
 sta_fio_ior_std = data.fio_sta.ior_std;
 
 pspk = data.fio_sta.pspk_mean;
+if isempty(pspk)
+    pspk = 0;
+end
 
 mid1_filt = data.filter_mean_test2_v1;
 mid1_fio_x = data.fio_mid1.x1_mean;
@@ -34,53 +37,78 @@ mid2_fio_ior = data.fio_mid2.pspkx2_mean;
 mid2_fio_ior_std = data.fio_mid2.pspkx2_std;
 
 
+mxmx = max([abs(sta_fio_x(:)); abs(mid1_fio_x(:)); abs(mid2_fio_x(:))]);
+
+mxmx_prob = max([abs(sta_fio_ior(:)); abs(mid1_fio_ior(:)); abs(mid2_fio_ior(:))]);
+
 
 subplot(3,2,1);
 imagesc(sta_filt);
+cmap = brewmaps('rdbu', 21);
+cmap = cmap([1:9 11 13:end],:); % get more contrast in STRF
+colormap(cmap);
+boundary = max(abs(sta_filt(:)));
+set(gca, 'clim', [-1.05*boundary-eps 1.05*boundary+eps]);
 tickpref;
 title(sprintf('STA; nspk=%.0f, ndim=%.0f, nspk/ndim=%.2f', ...
     nspk, nf_filter*nt_filter, nspk / (nf_filter*nt_filter)));
 
 subplot(3,2,2);
 hold on;
-plot(sta_fio_x, sta_fio_ior, 'ko-', 'markerfacecolor', 'k');
-xlim([1.1*min(sta_fio_x) 1.1*max(sta_fio_x)]);
-ylim([0 1.1*max(sta_fio_ior)]);
-plot(xlim, [pspk pspk], 'k--');
+plot(sta_fio_x, 200*sta_fio_ior, 'ko-', 'markerfacecolor', 'k');
+%xlim([1.1*min(sta_fio_x) 1.1*max(sta_fio_x)]);
+xlim([-mxmx mxmx]);
+%ylim([0 1.1*max(sta_fio_ior)]);
+ylim([0 200*mxmx_prob]);
+plot(xlim, 200*[pspk pspk], 'k--');
 tickpref;
 title('STA Nonlinearity');
     
 
 subplot(3,2,3);
 imagesc(mid1_filt);
+cmap = brewmaps('rdbu', 21);
+cmap = cmap([1:9 11 13:end],:); % get more contrast in STRF
+colormap(cmap);
+boundary = max(abs(mid1_filt(:)));
+set(gca, 'clim', [-1.05*boundary-eps 1.05*boundary+eps]);
 tickpref;
 title('MID1');
 
 subplot(3,2,4);
 hold on;
-plot(mid1_fio_x, mid1_fio_ior, 'ko-', 'markerfacecolor', 'k');
-xlim([1.1*min(mid1_fio_x) 1.1*max(mid1_fio_x)]);
-ylim([0 1.1*max(mid1_fio_ior)]);
-plot(xlim, [pspk pspk], 'k--');
+plot(mid1_fio_x, 200*mid1_fio_ior, 'ko-', 'markerfacecolor', 'k');
+%xlim([1.1*min(mid1_fio_x) 1.1*max(mid1_fio_x)]);
+xlim([-mxmx mxmx]);
+%ylim([0 1.1*max(mid1_fio_ior)]);
+ylim([0 200*mxmx_prob]);
+plot(xlim, 200*[pspk pspk], 'k--');
 tickpref;
 title('MID1 Nonlinearity');
 
 
 subplot(3,2,5);
 imagesc(mid2_filt);
+cmap = brewmaps('rdbu', 21);
+cmap = cmap([1:9 11 13:end],:); % get more contrast in STRF
+colormap(cmap);
+boundary = max(abs(mid2_filt(:)));
+set(gca, 'clim', [-1.05*boundary-eps 1.05*boundary+eps]);
 tickpref;
 title('MID2');
 
 subplot(3,2,6);
 hold on;
-plot(mid2_fio_x, mid2_fio_ior, 'ko-', 'markerfacecolor', 'k');
-xlim([1.1*min(mid2_fio_x) 1.1*max(mid2_fio_x)]);
-ylim([0 1.1*max(mid2_fio_ior)]);
-plot(xlim, [pspk pspk], 'k--');
+plot(mid2_fio_x, 200*mid2_fio_ior, 'ko-', 'markerfacecolor', 'k');
+%xlim([1.1*min(mid2_fio_x) 1.1*max(mid2_fio_x)]);
+%ylim([0 1.1*max(mid2_fio_ior)]);
+xlim([-mxmx mxmx]);
+ylim([0 200*mxmx_prob]);
+plot(xlim, 200*[pspk pspk], 'k--');
 tickpref;
 title('MID2 Nonlinearity');
 
-suptitle(iskfile);
+suptitle(strrep(iskfile, '_', '-'));
 
 ss = get(0,'screensize');
 set(gcf,'position', [ss(3)-1.05*560 ss(4)-1.2*720 560 720]);
