@@ -37,9 +37,16 @@ mid2_fio_ior = data.fio_mid2.pspkx2_mean;
 mid2_fio_ior_std = data.fio_mid2.pspkx2_std;
 
 
-mxmx = max([abs(sta_fio_x(:)); abs(mid1_fio_x(:)); abs(mid2_fio_x(:))]);
+xfio0 = sta_fio_x(2:end-1);
+fio0 = sta_fio_ior(2:end-1);
+xfio1 = mid1_fio_x(2:end-1);
+fio1 = mid1_fio_ior(2:end-1);
+xfio2 = mid2_fio_x(2:end-1);
+fio2 = mid2_fio_ior(2:end-1);
 
-mxmx_prob = max([abs(sta_fio_ior(:)); abs(mid1_fio_ior(:)); abs(mid2_fio_ior(:))]);
+mxmx = max([abs(xfio0(:)); abs(xfio1(:)); abs(xfio2(:))]);
+
+mxmx_prob = max([abs(fio0(:)); abs(fio1(:)); abs(fio2(:))]);
 
 
 subplot(3,2,1);
@@ -55,7 +62,7 @@ title(sprintf('STA; nspk=%.0f, ndim=%.0f, nspk/ndim=%.2f', ...
 
 subplot(3,2,2);
 hold on;
-plot(sta_fio_x, 200*sta_fio_ior, 'ko-', 'markerfacecolor', 'k');
+plot(sta_fio_x(2:end-1), 200*sta_fio_ior(2:end-1), 'ko-', 'markerfacecolor', 'k');
 %xlim([1.1*min(sta_fio_x) 1.1*max(sta_fio_x)]);
 xlim([-mxmx mxmx]);
 %ylim([0 1.1*max(sta_fio_ior)]);
@@ -77,7 +84,7 @@ title('MID1');
 
 subplot(3,2,4);
 hold on;
-plot(mid1_fio_x, 200*mid1_fio_ior, 'ko-', 'markerfacecolor', 'k');
+plot(mid1_fio_x(2:end-1), 200*mid1_fio_ior(2:end-1), 'ko-', 'markerfacecolor', 'k');
 %xlim([1.1*min(mid1_fio_x) 1.1*max(mid1_fio_x)]);
 xlim([-mxmx mxmx]);
 %ylim([0 1.1*max(mid1_fio_ior)]);
@@ -99,7 +106,7 @@ title('MID2');
 
 subplot(3,2,6);
 hold on;
-plot(mid2_fio_x, 200*mid2_fio_ior, 'ko-', 'markerfacecolor', 'k');
+plot(mid2_fio_x(2:end-1), 200*mid2_fio_ior(2:end-1), 'ko-', 'markerfacecolor', 'k');
 %xlim([1.1*min(mid2_fio_x) 1.1*max(mid2_fio_x)]);
 %ylim([0 1.1*max(mid2_fio_ior)]);
 xlim([-mxmx mxmx]);
@@ -111,9 +118,11 @@ title('MID2 Nonlinearity');
 suptitle(strrep(iskfile, '_', '-'));
 
 ss = get(0,'screensize');
-set(gcf,'position', [ss(3)-1.05*560 ss(4)-1.2*720 560 720]);
+set(gcf,'position', [ss(3)-1.05*560 ss(4)-1.2*720 460 720]);
 
 print_mfilename(mfilename);
+
+orient tall;
 
 return;
 

@@ -102,7 +102,7 @@ exp_site = unique(exp_site);
 
 
 
-pdf_file_total = {};
+pdf_file_units = {};
 
 for i = 1:length(matfiles)
    
@@ -113,9 +113,9 @@ for i = 1:length(matfiles)
     eps_file = fullfile(figpath, sprintf('%s.eps',name));
     pdf_file = fullfile(figpath, sprintf('%s.pdf',name));
    
-    pdf_file_total{length(pdf_file_total)+1} = pdf_file;
+    pdf_file_units{length(pdf_file_units)+1} = pdf_file;
     
-    if ( ~exist(pdf_file,'file') )
+%    if ( ~exist(pdf_file,'file') )
         
         load(matfiles{i}, 'data');
         
@@ -137,36 +137,46 @@ for i = 1:length(matfiles)
         close all;
 
         fprintf('Figure saved in: %s\n\n', pdf_file);
-    else
-        fprintf('Figure already saved in: %s\n\n', pdf_file);
-    end
+%    else
+%        fprintf('Figure already saved in: %s\n\n', pdf_file);
+%    end
     
 end % (for i)
 
 
-pdf_file_dir = sprintf('mid_filter_fio.pdf');
-pdf_file_dir = fullfile(figpath, pdf_file_dir);
-
-d = dir(pdf_file_dir);
-if isempty(d)
-    append_pdfs(pdf_file_dir, pdf_file_total); 
+pdf_file_site = sprintf('mid_filter_fio.pdf');
+pdf_file_site = fullfile(figpath, pdf_file_site);
+if exist(pdf_file_site, 'file')
+    delete(pdf_file_site);
 end
 
+for j = 1:length(pdf_file_units)
+    file = pdf_file_units{j};
+    fprintf('Appending %s\n', file);
+    append_pdfs(pdf_file_site, file);
+end % (for j)
 
-for i = 1:length(exp_site)
-    exp_site_files = sprintf('%s_*-filter-fio.pdf', exp_site{i});
-    d = dir(fullfile(figpath, exp_site_files));
-    exp_site_files = {d.name};
-
-    for j = 1:length(exp_site_files)
-        exp_site_files{j} = fullfile(figpath, exp_site_files{j});
-        fprintf('Appending %s\n', exp_site_files{j});
-    end % (for j)
-
-    exp_site_group_pdf_file = fullfile(figpath, sprintf('%s-filter-fio.pdf', exp_site{i}));
-    append_pdfs(exp_site_group_pdf_file, exp_site_files);
-
-end % (for i)
+%
+%d = dir(pdf_file_dir);
+%if isempty(d)
+%    append_pdfs(pdf_file_dir, pdf_file_total); 
+%end
+%
+%
+%for i = 1:length(exp_site)
+%    exp_site_files = sprintf('%s_*-filter-fio.pdf', exp_site{i});
+%    d = dir(fullfile(figpath, exp_site_files));
+%    exp_site_files = {d.name};
+%
+%    for j = 1:length(exp_site_files)
+%        exp_site_files{j} = fullfile(figpath, exp_site_files{j});
+%        fprintf('Appending %s\n', exp_site_files{j});
+%    end % (for j)
+%
+%    exp_site_group_pdf_file = fullfile(figpath, sprintf('%s-filter-fio.pdf', exp_site{i}));
+%    append_pdfs(exp_site_group_pdf_file, exp_site_files);
+%
+%end % (for i)
 
 
 return;

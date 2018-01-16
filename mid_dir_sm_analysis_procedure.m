@@ -51,7 +51,9 @@ else
 end
 
 
-% mid_sm_plot_projinfo(projinfo);
+mid_dir_plot_train_test_filters_nonlinearities.m
+
+mid_sm_plot_projinfo(projinfo);
 
 return;
 
