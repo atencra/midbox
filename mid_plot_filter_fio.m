@@ -15,7 +15,7 @@ nf_filter = data.nf_filter;
 nt_filter = data.nt_filter;
 
 
-sta_filt = data.filter_mean_sta;
+sta_filt = flipud(data.filter_mean_sta);
 sta_fio_x = data.fio_sta.x_mean;
 sta_fio_ior = data.fio_sta.ior_mean;
 sta_fio_ior_std = data.fio_sta.ior_std;
@@ -25,13 +25,13 @@ if isempty(pspk)
     pspk = 0;
 end
 
-mid1_filt = data.filter_mean_test2_v1;
+mid1_filt = flipud(data.filter_mean_test2_v1);
 mid1_fio_x = data.fio_mid1.x1_mean;
 mid1_fio_ior = data.fio_mid1.pspkx1_mean;
 mid1_fio_ior_std = data.fio_mid1.pspkx1_std;
 
 
-mid2_filt = data.filter_mean_test2_v2;
+mid2_filt = flipud(data.filter_mean_test2_v2);
 mid2_fio_x = data.fio_mid2.x2_mean;
 mid2_fio_ior = data.fio_mid2.pspkx2_mean;
 mid2_fio_ior_std = data.fio_mid2.pspkx2_std;
@@ -57,8 +57,12 @@ colormap(cmap);
 boundary = max(abs(sta_filt(:)));
 set(gca, 'clim', [-1.05*boundary-eps 1.05*boundary+eps]);
 tickpref;
-title(sprintf('STA; nspk=%.0f, ndim=%.0f, nspk/ndim=%.2f', ...
-    nspk, nf_filter*nt_filter, nspk / (nf_filter*nt_filter)));
+set(gca,'xtick', [1 size(sta_filt,2)], 'xticklabel', [100 0]);
+set(gca,'ytick', [1 size(sta_filt,1)], 'yticklabel', [40 0.5]);
+title('STA');
+
+%title(sprintf('STA; nspk=%.0f, ndim=%.0f, nspk/ndim=%.2f', ...
+%    nspk, nf_filter*nt_filter, nspk / (nf_filter*nt_filter)));
 
 subplot(3,2,2);
 hold on;
@@ -80,18 +84,24 @@ colormap(cmap);
 boundary = max(abs(mid1_filt(:)));
 set(gca, 'clim', [-1.05*boundary-eps 1.05*boundary+eps]);
 tickpref;
+set(gca,'xtick', [1 size(sta_filt,2)], 'xticklabel', [100 0]);
+set(gca,'ytick', [1 size(sta_filt,1)], 'yticklabel', [40 0.5]);
 title('MID1');
+ylabel('Frequency (kHz)');
 
 subplot(3,2,4);
 hold on;
-plot(mid1_fio_x(2:end-1), 200*mid1_fio_ior(2:end-1), 'ko-', 'markerfacecolor', 'k');
-%xlim([1.1*min(mid1_fio_x) 1.1*max(mid1_fio_x)]);
+
+x = mid1_fio_x(2:end-1);
+y = 200*mid1_fio_ior(2:end-1);
+mxmx_prob = max([abs(y(:))]);
+plot(x, y, 'ko-', 'markerfacecolor', 'k');
 xlim([-mxmx mxmx]);
-%ylim([0 1.1*max(mid1_fio_ior)]);
-ylim([0 200*mxmx_prob]);
+ylim([0 mxmx_prob]);
 plot(xlim, 200*[pspk pspk], 'k--');
 tickpref;
 title('MID1 Nonlinearity');
+ylabel('Event Rate (1/s)');
 
 
 subplot(3,2,5);
@@ -102,18 +112,25 @@ colormap(cmap);
 boundary = max(abs(mid2_filt(:)));
 set(gca, 'clim', [-1.05*boundary-eps 1.05*boundary+eps]);
 tickpref;
+set(gca,'xtick', [1 size(sta_filt,2)], 'xticklabel', [100 0]);
+set(gca,'ytick', [1 size(sta_filt,1)], 'yticklabel', [40 0.5]);
 title('MID2');
+xlabel('Time Before Spike (ms)');
 
 subplot(3,2,6);
 hold on;
-plot(mid2_fio_x(2:end-1), 200*mid2_fio_ior(2:end-1), 'ko-', 'markerfacecolor', 'k');
+x = mid2_fio_x(3:end-2);
+y = 200*mid2_fio_ior(3:end-2);
+mxmx_prob = max([abs(y(:))]);
+plot(x, y, 'ko-', 'markerfacecolor', 'k');
 %xlim([1.1*min(mid2_fio_x) 1.1*max(mid2_fio_x)]);
 %ylim([0 1.1*max(mid2_fio_ior)]);
 xlim([-mxmx mxmx]);
-ylim([0 200*mxmx_prob]);
+ylim([0 mxmx_prob]);
 plot(xlim, 200*[pspk pspk], 'k--');
 tickpref;
 title('MID2 Nonlinearity');
+xlabel('Projection (SD)');
 
 suptitle(strrep(iskfile, '_', '-'));
 
