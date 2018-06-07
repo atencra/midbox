@@ -9,13 +9,14 @@ function mid_plot_filter_fio(data)
 
 
 
-iskfile = data.iskfile;
-nspk = sum(data.locator);
+%iskfile = data.iskfile;
+%nspk = sum(data.locator);
 nf_filter = data.nf_filter;
 nt_filter = data.nt_filter;
 
 
 sta_filt = flipud(data.filter_mean_sta);
+
 sta_fio_x = data.fio_sta.x_mean;
 sta_fio_ior = data.fio_sta.ior_mean;
 sta_fio_ior_std = data.fio_sta.ior_std;

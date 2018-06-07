@@ -1,4 +1,4 @@
-function [filtstr, badfiles] = get_filters_from_dat_files(filestruct, stimfolder, prefix)
+function [filtstr] = get_filters_from_dat_files(filestruct, prefix, paramfile)
 % get_filters_from_dat_files - all filters from mid analysis in one data
 %
 % [filtstr] = get_filters_from_dat_files(filestruct, prefix, paramfile)
@@ -44,73 +44,83 @@ function [filtstr, badfiles] = get_filters_from_dat_files(filestruct, stimfolder
 %
 % caa 1/22/10
 
-if ~exist('prefix', 'var')
-    prefix = '.\';
+
+
+if ( nargin == 0 )
+   error('You need between 1 and 4 input args.');
 end
+
+if ( nargin == 1 )
+   prefix = 'dat_files\';
+   paramfile = 'D:\stimuli\20031124\dmr-50flo-40000fhi-4SM-500TM-40db-48DF-21min_DFt2_DFf8_param.mat';
+end
+
+if ( nargin == 2 )
+   paramfile = 'D:\stimuli\20031124\dmr-50flo-40000fhi-4SM-500TM-40db-48DF-21min_DFt2_DFf8_param.mat';
+end
+
+
+
 
 nh = filestruct(1).nh;
 nv = filestruct(1).nv;
 nlags = filestruct(1).nlags;
 numtbins = filestruct(1).tbins; %20;
 numfbins = filestruct(1).fbins; %25;
+x0 = filestruct(1).x0; %20;
+index_freq = (x0):(numfbins-1+x0);
+
+s = load(paramfile,'taxis', 'faxis');
+taxis = s.taxis;
+time = taxis(1:numtbins); % time axis for filters
+faxis = s.faxis;
+freq = faxis(index_freq); % frequency axis for filters
+
 
 
 % if ( length(locator) ~= size(stimulus,2) )
 %    error('Spike train and envelope file have different number of trials.');
 % end
 
-filtstr = filestruct;
-fn = fieldnames(filtstr);
-% label should always be the last field before the filenames
-labelidx = find(cellfun(@(x) strcmp(x, 'label'), fn));
-filtstr = rmfield(filtstr, fn(labelidx+1:end));
-
-badfiles = [];
 
 for i = 1:length(filestruct)
-    
-    x0 = filestruct(i).x0; %20;
-    index_freq = (x0):(numfbins-1+x0);
-    
-    % get paramfile
-    basefile = regexp(filestruct(i).sprfile,'^\S+(?=(.spr))','match','once');
-    paramfile = [basefile '_param.mat'];
 
-    s = load(fullfile(stimfolder, paramfile),'taxis', 'faxis');
-    taxis = s.taxis;
-    time = taxis(1:numtbins); % time axis for filters
-    faxis = s.faxis;
-    freq = faxis(index_freq); % frequency axis for filters
+	if ( isfield(filestruct, 'exp') )
+	   filtstr(i).exp = filestruct(i).exp;
+		filtstr(i).site = filestruct(i).site;
+		filtstr(i).chan = filestruct(i).chan;
+		filtstr(i).model = filestruct(i).model;
+		filtstr(i).depth = filestruct(i).depth;
+		filtstr(i).position = filestruct(i).position;
+		filtstr(i).stim = filestruct(i).stim;
+		filtstr(i).atten = filestruct(i).atten;
+		filtstr(i).spl = filestruct(i).spl;
+		filtstr(i).sm = filestruct(i).sm;
+		filtstr(i).tm = filestruct(i).tm;
+		filtstr(i).mdb = filestruct(i).mdb;
+	else
+	   filtstr(i).exp = [];
+		filtstr(i).site = [];
+		filtstr(i).chan = [];
+		filtstr(i).model = [];
+		filtstr(i).depth = [];
+		filtstr(i).position = [];
+		filtstr(i).stim = [];
+		filtstr(i).atten = [];
+		filtstr(i).spl = [];
+		filtstr(i).sm = [];
+		filtstr(i).tm = [];
+		filtstr(i).mdb = [];
+	end
 
-
-% 	if ( isfield(filestruct, 'exp') )
-% 	   filtstr(i).exp = filestruct(i).exp;
-% 		filtstr(i).site = filestruct(i).site;
-% 		filtstr(i).chan = filestruct(i).chan;
-% 		filtstr(i).model = filestruct(i).model;
-% 		filtstr(i).depth = filestruct(i).depth;
-% 		filtstr(i).position = filestruct(i).position;
-% 		filtstr(i).stim = filestruct(i).stim;
-% 		filtstr(i).atten = filestruct(i).atten;
-% 		filtstr(i).spl = filestruct(i).spl;
-% 		filtstr(i).sm = filestruct(i).sm;
-% 		filtstr(i).tm = filestruct(i).tm;
-% 		filtstr(i).mdb = filestruct(i).mdb;
-% 	else
-% 	   filtstr(i).exp = [];
-% 		filtstr(i).site = [];
-% 		filtstr(i).chan = [];
-% 		filtstr(i).model = [];
-% 		filtstr(i).depth = [];
-% 		filtstr(i).position = [];
-% 		filtstr(i).stim = [];
-% 		filtstr(i).atten = [];
-% 		filtstr(i).spl = [];
-% 		filtstr(i).sm = [];
-% 		filtstr(i).tm = [];
-% 		filtstr(i).mdb = [];
-% 	end
-
+   filtstr(i).location = filestruct(i).location;
+   filtstr(i).unit = filestruct(i).unit;
+   filtstr(i).x0 = filestruct(i).x0;
+   filtstr(i).nh = filestruct(i).nh;
+   filtstr(i).nv = filestruct(i).nv;
+   filtstr(i).nlags = filestruct(i).nlags;
+   filtstr(i).numtbins = numtbins;
+   filtstr(i).numfbins = numfbins;
    filtstr(i).time = time;
    filtstr(i).freq = freq;
 
@@ -129,8 +139,7 @@ for i = 1:length(filestruct)
          end
       end
 
-      %[v_sta, ~, ~, mtx_sta] = get_auditory_filter(file_sta, nh, nv, nlags);
-      [v_sta, ~, ~, mtx_sta] = get_auditory_filter(file_sta, nh, nlags);
+      [v_sta, coeff_sta, projection_sta, mtx_sta] = get_auditory_filter(file_sta, nh, nv, nlags);
    
       filtstr(i).v_sta = v_sta;
       filtstr(i).mtx_sta = mtx_sta;
@@ -160,8 +169,7 @@ for i = 1:length(filestruct)
          end
       end
 
-      %[v1, coeff_v1, projection_v1, mtx_v1] = get_auditory_filter(file_v1, nh, nv, nlags);
-      [v1, coeff_v1, projection_v1, mtx_v1] = get_auditory_filter(file_v1, nh, nlags);
+      [v1, coeff_v1, projection_v1, mtx_v1] = get_auditory_filter(file_v1, nh, nv, nlags);
    
       filtstr(i).v1 = v1;
       filtstr(i).mtx_v1 = mtx_v1;
@@ -190,8 +198,7 @@ for i = 1:length(filestruct)
          end
       end
 
-      %[v2, coeff_v2, projection_v2, mtx_v2] = get_auditory_filter(file_v2, nh, nv, nlags);
-      [v2, coeff_v2, projection_v2, mtx_v2] = get_auditory_filter(file_v2, nh, nlags);
+      [v2, coeff_v2, projection_v2, mtx_v2] = get_auditory_filter(file_v2, nh, nv, nlags);
    
       filtstr(i).v2 = v2;
       filtstr(i).mtx_v2 = mtx_v2;
@@ -201,7 +208,6 @@ for i = 1:length(filestruct)
       filtstr(i).mtx_v2 = [];
    else
       fprintf('You need to run the mid code to compute the second filter.\n');
-      badfiles = [badfiles i];
       %error('You need to run the mid code to compute the second filter.');
    end
 

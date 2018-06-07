@@ -192,10 +192,6 @@ for i=1:Nparts
    pxspk_mtx = [pxspk_mtx pxspk];
    pspkx_mtx = [pspkx_mtx pspkx];
     
-files
-coeff
-pause
-
 end
 
 

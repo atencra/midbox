@@ -19,7 +19,6 @@ function [v_mean, coeff, projection, mtx] = get_auditory_filter(files, Nh, nlags
 mtx = [];
 
 Nv = 1;
-
 fsize = Nv*Nh;
 Nn = fsize*nlags; % total number of elements in the STRF
 Nparts = length(files);

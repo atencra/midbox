@@ -1,4 +1,4 @@
-function [filestruct] = get_files_for_mid_analysis(stimfolder)
+function filestruct = get_files_for_mid_analysis(location)
 % get_files_for_mid_analysis - put MID data files into a struct array
 %    so data can be analysed
 %
@@ -16,93 +16,70 @@ function [filestruct] = get_files_for_mid_analysis(stimfolder)
 %
 % caa 4/11/06
 
-
-if ~exist('stimfolder','var')
-    %stimfolder = 'I:\Ripple_Noise\downsampled_for_MID';
+if ( nargin~=1 )
+   error('You need one input arg.');
 end
 
-files = gfn('rpsta_*', 0);
-re = regexp(files, '(?<=(rpsta_))\S+(?=(_\dx\d{2}x\d{2}))', 'match','once');
-uniquefiles = unique(re);
-details = regexp(uniquefiles, '_', 'split');
-exp = cellfun(@(x) x{1}, details, 'UniformOutput', 0);
-site = cellfun(@(x) x{2}, details, 'UniformOutput', 0);
-unitnum = cellfun(@(x) x{3}, details, 'UniformOutput', 0);
-    
+current_directory = pwd;
 
-temp = files{1};
-splitexp = regexp(temp, 'x', 'split');
-fbins = str2double(splitexp{2});
-tbins = str2double(regexp(splitexp{3}, '^\d{1,3}', 'match','once'));
+if ( isempty(findstr(current_directory, 'C:\MATLAB65\work\tatyana\Filters')) )
+   error('You need to run this function in C:\MATLAB65\work\tatyana\Filters');
+end
 
-filestruct(length(unitnum)).exp = [];
+dfile = dir(['rpsta_' num2str(location) '*.dat']);
+
+if ( isempty(dfile) )
+   error('That location does not exist.');
+end
+
+unitnum = [];
+for i = 1:length(dfile)
+   file = dfile(i).name;
+   index = findstr('_', file);
+   unitnum = [unitnum str2num(file(index(2)+1:index(3)-1))];
+end
+unitnum = sort(unique(unitnum));
+
+temp = dfile(1).name;
+index = findstr(file,'x');
+fbins = str2num( file(index(1)+1:index(2)-1) );
+tbins = str2num( file(index(2)+1:index(2)+2) );
+
+
+% Define a struct to hold the results
+filestruct = struct(...
+'location',      [], ...
+'unit',          [], ...
+'tbins',         [], ...
+'fbins',         [], ...
+'rpsta',     [], ...
+'rpx1pxpxt_sta', [], ...
+'rpdbest1_v1',    [], ...
+'rpdbest1_v2',    [], ...
+'rpdbest2_v1',    [], ...
+'rpdbest2_v2',    [], ...
+'rpdtest1_v1',    [], ...
+'rpdtest1_v2',    [], ...
+'rpdtest2_v1',    [], ...
+'rpdtest2_v2',    [], ...
+'rpdx1x2px_pxt_1',   [], ...
+'rpdx1x2px_pxt_2',   []);
+
 
 for i = 1:length(unitnum)
-    
-    
-    % get x0 from input .txt files
-    txtfile = gfn(['*' exp{i} '*' site{i} '_' unitnum{i} '_1.txt'], 0);
-    f = fopen(txtfile, 'r');
-    C = textscan(f, '%s', 'Delimiter', '\n');
-    fclose('all');
-    x0 = str2double(C{1}{7});
-    stim = regexp(C{1}{1}, '^\w+', 'match', 'once');      
-    %sprfile = fullfile(stimfolder, C{1}{1});
-    sprfile = C{1}{1};
-    iskfile = C{1}{2};
-    locator = isk_file_to_locator(iskfile);
 
-
-    % Define a struct to hold the results
-    % filestruct = struct(...
-    % 'location',      [], ...
-    % 'site',          [], ...
-    % 'unit',          [], ...
-    % 'tbins',         [], ...
-    % 'fbins',         [], ...
-    % 'rpsta',     [], ...
-    % 'rpx1pxpxt_sta', [], ...
-    % 'rpdbest1_v1',    [], ...
-    % 'rpdbest1_v2',    [], ...
-    % 'rpdbest2_v1',    [], ...
-    % 'rpdbest2_v2',    [], ...
-    % 'rpdtest1_v1',    [], ...
-    % 'rpdtest1_v2',    [], ...
-    % 'rpdtest2_v1',    [], ...
-    % 'rpdtest2_v2',    [], ...
-    % 'rpdx1x2px_pxt_1',   [], ...
-    % 'rpdx1x2px_pxt_2',   []);
-
-
-
-   filestruct(i).exp = exp{i};
-   filestruct(i).site = site{i};
-   filestruct(i).unit = unitnum{i};
-   filestruct(i).stim = stim;
-   filestruct(i).sprfile = sprfile;
-   filestruct(i).iskfile = iskfile;
-   filestruct(i).locator = locator;
+   filestruct(i).location = location;
+   filestruct(i).unit = unitnum(i);
    filestruct(i).tbins = tbins;
    filestruct(i).fbins = fbins;
-   filestruct(i).nh = 25;
-   filestruct(i).nv = 1;
-   filestruct(i).nlags = tbins;
-   filestruct(i).x0 = x0;
-   
-%    txtfile = gfn([fullfile(currfold, '\Inputs\') '*' exp '*_0' num2str(site) '_' num2str(i) '_1.txt'], 0);
-%    f = fopen(fullfile('Inputs\',txtfile{1}), 'r');
-%    C = textscan(f, '%s', 'Delimiter', '\n');
-%    label = regexp(C{1}{2},'(?<=(spk-))\w*_\d{1,3}(?=(.isk$))','match','once');
-%    filestruct(i).label = regexprep(label, '_', '-');
-%    fclose('all');
 
 
    % The RPSTA Files
    %=================================================================
 
    % Get the STA files
-   dfile = dir(['rpsta_' exp{i} '_' site{i} '_' unitnum{i} '_*.dat']);
-   if ( ~isempty(dfile) && length(dfile) == 4 )
+   dfile = dir(['rpsta_' num2str(location) '_' num2str(unitnum(i)) '_*.dat']);
+   if ( ~isempty(dfile) & length(dfile) == 4 )
       filestruct(i).rpsta{1} = dfile(1).name;
       filestruct(i).rpsta{2} = dfile(2).name;
       filestruct(i).rpsta{3} = dfile(3).name;
@@ -111,8 +88,8 @@ for i = 1:length(unitnum)
 
 
    % Get the STA input/output function files
-   dfile = dir(['rpx1pxpxt_sta_' exp{i} '_' site{i} '_' unitnum{i} '_*.dat']);
-   if ( ~isempty(dfile) && length(dfile) == 4 )
+   dfile = dir(['rpx1pxpxt_sta_' num2str(location) '_' num2str(unitnum(i)) '_*.dat']);
+   if ( ~isempty(dfile) & length(dfile) == 4 )
       filestruct(i).rpx1pxpxt_sta{1} = dfile(1).name;
       filestruct(i).rpx1pxpxt_sta{2} = dfile(2).name;
       filestruct(i).rpx1pxpxt_sta{3} = dfile(3).name;
@@ -124,8 +101,8 @@ for i = 1:length(unitnum)
    %=================================================================
 
    % Get the MID1 files - First Most Informative Dimension
-   dfile = dir(['rpdtest1_v1_' exp{i} '_' site{i} '_' unitnum{i} '_*.dat']);
-   if ( ~isempty(dfile) && length(dfile) == 4 )
+   dfile = dir(['rpdtest1_v1_' num2str(location) '_' num2str(unitnum(i)) '_*.dat']);
+   if ( ~isempty(dfile) & length(dfile) == 4 )
       filestruct(i).rpdtest1_v1{1} = dfile(1).name;
       filestruct(i).rpdtest1_v1{2} = dfile(2).name;
       filestruct(i).rpdtest1_v1{3} = dfile(3).name;
@@ -134,8 +111,8 @@ for i = 1:length(unitnum)
 
 
    % Get the MID2 files - First Most Informative Dimension
-   dfile = dir(['rpdtest1_v2_' exp{i} '_' site{i} '_' unitnum{i} '_*.dat']);
-   if ( ~isempty(dfile) && length(dfile) == 4 )
+   dfile = dir(['rpdtest1_v2_' num2str(location) '_' num2str(unitnum(i)) '_*.dat']);
+   if ( ~isempty(dfile) & length(dfile) == 4 )
       filestruct(i).rpdtest1_v2{1} = dfile(1).name;
       filestruct(i).rpdtest1_v2{2} = dfile(2).name;
       filestruct(i).rpdtest1_v2{3} = dfile(3).name;
@@ -144,8 +121,8 @@ for i = 1:length(unitnum)
 
 
    % Get the MID1 files - First Most Informative Dimension
-   dfile = dir(['rpdtest2_v1_' exp{i} '_' site{i} '_' unitnum{i} '_*.dat']);
-   if ( ~isempty(dfile) && length(dfile) == 4 )
+   dfile = dir(['rpdtest2_v1_' num2str(location) '_' num2str(unitnum(i)) '_*.dat']);
+   if ( ~isempty(dfile) & length(dfile) == 4 )
       filestruct(i).rpdtest2_v1{1} = dfile(1).name;
       filestruct(i).rpdtest2_v1{2} = dfile(2).name;
       filestruct(i).rpdtest2_v1{3} = dfile(3).name;
@@ -154,8 +131,8 @@ for i = 1:length(unitnum)
 
 
    % Get the MID2 files - First Most Informative Dimension
-   dfile = dir(['rpdtest2_v2_' exp{i} '_' site{i} '_' unitnum{i} '_*.dat']);
-   if ( ~isempty(dfile) && length(dfile) == 4 )
+   dfile = dir(['rpdtest2_v2_' num2str(location) '_' num2str(unitnum(i)) '_*.dat']);
+   if ( ~isempty(dfile) & length(dfile) == 4 )
       filestruct(i).rpdtest2_v2{1} = dfile(1).name;
       filestruct(i).rpdtest2_v2{2} = dfile(2).name;
       filestruct(i).rpdtest2_v2{3} = dfile(3).name;
@@ -168,8 +145,8 @@ for i = 1:length(unitnum)
    %=================================================================
 
    % Get the MID1 files - First Most Informative Dimension
-   dfile = dir(['rpdbest1_v1_' exp{i} '_' site{i} '_' unitnum{i} '_*.dat']);
-   if ( ~isempty(dfile) && length(dfile) == 4 )
+   dfile = dir(['rpdbest1_v1_' num2str(location) '_' num2str(unitnum(i)) '_*.dat']);
+   if ( ~isempty(dfile) & length(dfile) == 4 )
       filestruct(i).rpdbest1_v1{1} = dfile(1).name;
       filestruct(i).rpdbest1_v1{2} = dfile(2).name;
       filestruct(i).rpdbest1_v1{3} = dfile(3).name;
@@ -178,8 +155,8 @@ for i = 1:length(unitnum)
 
 
    % Get the MID2 files - First Most Informative Dimension
-   dfile = dir(['rpdbest1_v2_' exp{i} '_' site{i} '_' unitnum{i} '_*.dat']);
-   if ( ~isempty(dfile) && length(dfile) == 4 )
+   dfile = dir(['rpdbest1_v2_' num2str(location) '_' num2str(unitnum(i)) '_*.dat']);
+   if ( ~isempty(dfile) & length(dfile) == 4 )
       filestruct(i).rpdbest1_v2{1} = dfile(1).name;
       filestruct(i).rpdbest1_v2{2} = dfile(2).name;
       filestruct(i).rpdbest1_v2{3} = dfile(3).name;
@@ -188,8 +165,8 @@ for i = 1:length(unitnum)
 
 
    % Get the MID1 files - First Most Informative Dimension
-   dfile = dir(['rpdbest2_v1_' exp{i} '_' site{i} '_' unitnum{i} '_*.dat']);
-   if ( ~isempty(dfile) && length(dfile) == 4 )
+   dfile = dir(['rpdbest2_v1_' num2str(location) '_' num2str(unitnum(i)) '_*.dat']);
+   if ( ~isempty(dfile) & length(dfile) == 4 )
       filestruct(i).rpdbest2_v1{1} = dfile(1).name;
       filestruct(i).rpdbest2_v1{2} = dfile(2).name;
       filestruct(i).rpdbest2_v1{3} = dfile(3).name;
@@ -198,8 +175,8 @@ for i = 1:length(unitnum)
 
 
    % Get the MID2 files - First Most Informative Dimension
-   dfile = dir(['rpdbest2_v2_' exp{i} '_' site{i} '_' unitnum{i} '_*.dat']);
-   if ( ~isempty(dfile) && length(dfile) == 4 )
+   dfile = dir(['rpdbest2_v2_' num2str(location) '_' num2str(unitnum(i)) '_*.dat']);
+   if ( ~isempty(dfile) & length(dfile) == 4 )
       filestruct(i).rpdbest2_v2{1} = dfile(1).name;
       filestruct(i).rpdbest2_v2{2} = dfile(2).name;
       filestruct(i).rpdbest2_v2{3} = dfile(3).name;
@@ -210,8 +187,8 @@ for i = 1:length(unitnum)
 
    % Get the MID input/output function files - First and Second Most
    % Informative Dimensions
-   dfile = dir(['rpdx1x2px_pxt_1_' exp{i} '_' site{i} '_' unitnum{i} '_*.dat']);
-   if ( ~isempty(dfile) && length(dfile) == 4 )
+   dfile = dir(['rpdx1x2px_pxt_1_' num2str(location) '_' num2str(unitnum(i)) '_*.dat']);
+   if ( ~isempty(dfile) & length(dfile) == 4 )
       filestruct(i).rpdx1x2px_pxt_1{1} = dfile(1).name;
       filestruct(i).rpdx1x2px_pxt_1{2} = dfile(2).name;
       filestruct(i).rpdx1x2px_pxt_1{3} = dfile(3).name;
@@ -219,8 +196,8 @@ for i = 1:length(unitnum)
    end
 
 
-   dfile = dir(['rpdx1x2px_pxt_2_' exp{i} '_' site{i} '_' unitnum{i} '_*.dat']);
-   if ( ~isempty(dfile) && length(dfile) == 4 )
+   dfile = dir(['rpdx1x2px_pxt_2_' num2str(location) '_' num2str(unitnum(i)) '_*.dat']);
+   if ( ~isempty(dfile) & length(dfile) == 4 )
       filestruct(i).rpdx1x2px_pxt_2{1} = dfile(1).name;
       filestruct(i).rpdx1x2px_pxt_2{2} = dfile(2).name;
       filestruct(i).rpdx1x2px_pxt_2{3} = dfile(3).name;

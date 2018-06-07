@@ -1,4 +1,4 @@
-function datafiles = mid_dir_file_names_to_file_struct(varargin)
+function mid_dir_file_names_to_file_struct(varargin)
 %  mid_dir_file_names_to_file_struct - MID files for each single unit
 %
 %  datafiles = mid_dir_file_names_to_file_struct()
@@ -142,8 +142,15 @@ for i = 1:length(unit_file_base)
 
     % STA filter file names
     %============================================================
-    rpsta_files = dir(sprintf('rpsta_%s_%s_%s_*.dat', ...
-                            exp_dat, site_dat, stim_unit_dat));
+    sprintf('rpsta_%s_%s_%s_*.dat', exp_dat, site_dat, stim_unit_dat)
+
+    rpsta_files = dir(sprintf('rpsta_%s_%s_%s_*.dat', exp_dat, site_dat, stim_unit_dat));
+
+    rpsta_files
+
+    exp_dat
+    site_dat
+    stim_unit_dat
 
     if ( length(rpsta_files) ~= 4 )
         error(sprintf('length(rpsta_files) = %.0f', ...

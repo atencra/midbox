@@ -130,6 +130,7 @@ for i=1:Nparts
 
     pxspk_pspk = pxt; % p(x|spk) * p(spk)
 
+
     if (abs(sum(px)-1)>0.001) 
         display(sprintf('sum of px=%f',sum(px))); 
         fio = [];
